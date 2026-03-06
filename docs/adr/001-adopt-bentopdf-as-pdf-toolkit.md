@@ -4,7 +4,7 @@
 |---|---|
 | Status | Accepted |
 | Date | 2026-03-06 |
-| Decision Makers | Caide Spriestersbach, Juan Cano, Mike Niszl |
+| Decision Makers | Engineering team |
 
 ## Context
 
@@ -21,7 +21,7 @@ The tool will be deployed on the Cainmani server behind Keycloak authentication,
 - **Keycloak integration**: must work behind our existing SSO infrastructure
 - **Lightweight deployment**: minimal server resources (server is shared with other apps)
 - **Six core functions**: redact, organise/delete pages, compress, combine, remove passwords, sign & edit
-- **Budget**: 30,000 EUR total, minimize recurring costs
+- **Budget**: minimize recurring costs
 
 ## Decision
 
@@ -52,7 +52,7 @@ BentoPDF is licensed under AGPL-3.0. To comply:
 
 | Dimension | Score | Rationale |
 |---|---|---|
-| Necessity | 5 | Replaces $180+/yr Adobe licenses; all six required functions covered |
+| Necessity | 5 | Replaces paid Adobe licenses; all six required functions covered |
 | Feasibility | 5 | Pre-built Docker image, no custom code, deploys in under a day |
 | Cost | 5 | $0 (AGPL) or $49 one-time (commercial). No recurring costs |
 | Sustainability | 4 | Active upstream development, 1.5k+ GitHub stars, regular releases. Risk: single-maintainer project |
@@ -72,7 +72,7 @@ All dimensions score >= 3. Overall: strong fit.
 - Industry standard, well-supported
 
 **Cons:**
-- $22.99/user/month ($275.88/user/year) recurring cost
+- High per-user recurring cost
 - Per-user licensing does not scale
 - Files processed locally but software requires Adobe account and cloud sync
 - No self-hosted option
@@ -90,18 +90,18 @@ All dimensions score >= 3. Overall: strong fit.
 
 **Cons:**
 - Server-side processing: PDF files are uploaded to and processed on the server
-- OAuth2/OIDC (Keycloak) integration requires paid Server plan ($99/month) as of v2.1+
+- OAuth2/OIDC (Keycloak) integration requires paid Server plan as of v2.1+
 - Open-core model with features being moved behind paywalls over time
 - Cannot edit existing text in PDFs (only add new text)
 - Heavier server resource usage (Java + LibreOffice)
 
-**Why not chosen:** Keycloak OIDC requires $99/month paid plan. Server-side processing means files leave the user's machine. Open-core trajectory creates long-term cost risk.
+**Why not chosen:** Keycloak OIDC requires a paid plan. Server-side processing means files leave the user's machine. Open-core trajectory creates long-term cost risk.
 
 ## Consequences
 
 ### Positive
 
-- Zero recurring licensing costs (vs $276/user/year for Adobe)
+- Zero recurring licensing costs (vs paid per-user Adobe subscriptions)
 - Client-side processing ensures PDF files never leave the user's machine
 - Lightweight deployment: one nginx container + one oauth2-proxy container
 - Keycloak SSO via oauth2-proxy forwardAuth — reusable pattern for future static apps
