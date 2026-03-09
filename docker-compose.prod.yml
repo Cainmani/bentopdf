@@ -46,8 +46,7 @@ services:
       OAUTH2_PROXY_SET_XAUTHREQUEST: "true"
       # Skip the "Sign in with Keycloak OIDC" interstitial page
       OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: "true"
-      # Force HTTPS redirects (Cloudflare terminates SSL, Traefik receives HTTP)
-      OAUTH2_PROXY_FORCE_HTTPS: "true"
+
 
       # --- Cookie ---
       OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET:?Set OAUTH2_PROXY_COOKIE_SECRET in .env}
@@ -69,16 +68,13 @@ services:
       - "traefik.http.routers.pdf-oauth.entrypoints=web"
       - "traefik.http.services.pdf-oauth.loadbalancer.server.port=4180"
 
-      # --- Middleware: forwardAuth (checks session cookie via oauth2-proxy) ---
-      - "traefik.http.middlewares.pdf-auth.forwardauth.address=http://pdf-oauth2-proxy:4180/oauth2/auth"
+      # --- Middleware: forwardAuth (checks session, auto-redirects to Keycloak) ---
+      # Points at root "/" instead of "/oauth2/auth" — oauth2-proxy handles the
+      # redirect to Keycloak internally, avoiding the Traefik errors middleware
+      # which produces http:// redirect URLs behind Cloudflare SSL termination.
+      - "traefik.http.middlewares.pdf-auth.forwardauth.address=http://pdf-oauth2-proxy:4180/"
       - "traefik.http.middlewares.pdf-auth.forwardauth.trustForwardHeader=true"
       - "traefik.http.middlewares.pdf-auth.forwardauth.authResponseHeaders=X-Auth-Request-User,X-Auth-Request-Email,Authorization"
-
-      # --- Middleware: errors (catches 401, redirects to Keycloak login) ---
-      # Order matters: pdf-errors MUST come before pdf-auth in the middleware chain
-      - "traefik.http.middlewares.pdf-errors.errors.status=401-403"
-      - "traefik.http.middlewares.pdf-errors.errors.service=pdf-oauth"
-      - "traefik.http.middlewares.pdf-errors.errors.query=/oauth2/sign_in?rd={url}"
 
   # ---------------------------------------------------------------------------
   # BentoPDF — Static PDF toolkit (nginx)
@@ -101,8 +97,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.pdf.rule=Host(`pdf.${DOMAIN}`)"
       - "traefik.http.routers.pdf.entrypoints=web"
-      # Middleware chain: errors first (catches 401), then forwardAuth (checks session)
-      - "traefik.http.routers.pdf.middlewares=pdf-errors,pdf-auth"
+      # forwardAuth middleware — auto-redirects to Keycloak if unauthenticated
+      - "traefik.http.routers.pdf.middlewares=pdf-auth"
       - "traefik.http.services.pdf.loadbalancer.server.port=8080"
 
 # These networks are created by the infra repo's docker-compose.yml.
