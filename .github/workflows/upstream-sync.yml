@@ -1,0 +1,91 @@
+# =============================================================================
+# Upstream Sync Check — BentoPDF (Cainmani)
+# =============================================================================
+# Runs daily and on manual trigger. Compares our main branch against
+# upstream (alam00000/bentopdf) and opens an issue if new commits exist.
+# =============================================================================
+
+name: Upstream Sync Check
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"  # Every Monday at 08:00 UTC
+  workflow_dispatch:       # Manual trigger
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check-upstream:
+    runs-on: [self-hosted, cainmani]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/alam00000/bentopdf.git 2>/dev/null || true
+          git fetch upstream main
+
+      - name: Check for new upstream commits
+        id: check
+        run: |
+          COMMITS=$(git log --oneline HEAD..upstream/main)
+          if [ -z "$COMMITS" ]; then
+            echo "up_to_date=true" >> "$GITHUB_OUTPUT"
+            echo "No new upstream commits."
+          else
+            COUNT=$(echo "$COMMITS" | wc -l)
+            echo "up_to_date=false" >> "$GITHUB_OUTPUT"
+            echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+
+            # Save commit list for the issue body
+            EOF_MARKER=$(dd if=/dev/urandom bs=15 count=1 2>/dev/null | base64)
+            echo "commits<<$EOF_MARKER" >> "$GITHUB_OUTPUT"
+            echo "$COMMITS" >> "$GITHUB_OUTPUT"
+            echo "$EOF_MARKER" >> "$GITHUB_OUTPUT"
+
+            echo "Found $COUNT new upstream commit(s)."
+          fi
+
+      - name: Create or update issue
+        if: steps.check.outputs.up_to_date == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITLE="Upstream sync: ${{ steps.check.outputs.count }} new commit(s) available"
+          BODY=$(cat <<'EOF'
+          ## Upstream changes detected
+
+          **${{ steps.check.outputs.count }}** new commit(s) in [alam00000/bentopdf](https://github.com/alam00000/bentopdf) since our last sync.
+
+          ### Commits
+          ```
+          ${{ steps.check.outputs.commits }}
+          ```
+
+          ### To merge
+          ```bash
+          git fetch upstream
+          git merge upstream/main
+          git push origin main
+          # On server: git pull && docker compose -f docker-compose.prod.yml pull bentopdf && docker compose -f docker-compose.prod.yml up -d
+          ```
+
+          _This issue was created automatically by the upstream sync check workflow._
+          EOF
+          )
+
+          # Close any existing upstream sync issues first
+          gh issue list --label "upstream-sync" --state open --json number --jq '.[].number' | while read -r num; do
+            gh issue close "$num" --comment "Superseded by new check."
+          done
+
+          # Create new issue
+          gh issue create \
+            --title "$TITLE" \
+            --body "$BODY" \
+            --label "upstream-sync"

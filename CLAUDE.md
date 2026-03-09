@@ -4,10 +4,11 @@
 
 - **ALWAYS check for upstream changes** at the start of every session before doing any other work:
   ```bash
+  gh issue list --label "upstream-sync" --state open --repo Cainmani/bentopdf
   git fetch upstream
   git log --oneline HEAD..upstream/main
   ```
-  If there are new commits, inform the user and offer to merge them.
+  If there is an open `upstream-sync` issue or new upstream commits, inform the user and offer to merge them.
 - **ALWAYS use `--repo Cainmani/bentopdf`** when creating PRs with `gh pr create`. This is a fork — without this flag, PRs go to the upstream repo (alam00000/bentopdf) which cannot be undone.
 - **NEVER commit secrets** — `.env` files are gitignored. This repo is public (AGPL-3.0 compliance).
 
