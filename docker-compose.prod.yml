@@ -46,9 +46,12 @@ services:
       OAUTH2_PROXY_SET_XAUTHREQUEST: "true"
       # Skip the "Sign in with Keycloak OIDC" interstitial page
       OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: "true"
+      # Force HTTPS redirects (Cloudflare terminates SSL, Traefik receives HTTP)
+      OAUTH2_PROXY_FORCE_HTTPS: "true"
 
       # --- Cookie ---
       OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET:?Set OAUTH2_PROXY_COOKIE_SECRET in .env}
+      OAUTH2_PROXY_COOKIE_SECURE: "true"
       OAUTH2_PROXY_COOKIE_DOMAINS: .${DOMAIN}
       OAUTH2_PROXY_WHITELIST_DOMAINS: .${DOMAIN}
 
