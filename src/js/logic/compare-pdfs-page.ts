@@ -1,23 +1,29 @@
-import { showLoader, hideLoader, showAlert } from '../ui.js';
-import { getPDFDocument } from '../utils/helpers.js';
+import { showLoader, hideLoader, showAlert } from '../ui.ts';
+import { getPDFDocument } from '../utils/helpers.ts';
 import { icons, createIcons } from 'lucide';
 import * as pdfjsLib from 'pdfjs-dist';
 import { CompareState } from '@/types';
 import type {
   CompareFilterType,
-  ComparePageModel,
-  ComparePagePair,
   ComparePageResult,
   CompareTextChange,
+  CompareCategoryFilterState,
 } from '../compare/types.ts';
-import { extractPageModel } from '../compare/engine/extract-page-model.ts';
-import { comparePageModels } from '../compare/engine/compare-page-models.ts';
-import { renderVisualDiff } from '../compare/engine/visual-diff.ts';
 import { extractDocumentSignatures } from '../compare/engine/page-signatures.ts';
-import { pairPages } from '../compare/engine/pair-pages.ts';
-import { recognizePageCanvas } from '../compare/engine/ocr-page.ts';
-import { exportCompareHtmlReport } from '../compare/reporting/export-html-report.ts';
-import { isLowQualityExtractedText } from '../compare/engine/text-normalization.ts';
+import { pairPagesAsync } from '../compare/worker-api.ts';
+import type {
+  ComparePdfExportMode,
+  CompareCaches,
+  CompareRenderContext,
+} from '../compare/types.ts';
+import { exportComparePdf } from '../compare/reporting/export-compare-pdf.ts';
+import { LRUCache } from '../compare/lru-cache.ts';
+import { COMPARE_CACHE_MAX_SIZE } from '../compare/config.ts';
+import {
+  getElement,
+  computeComparisonForPair,
+  getComparisonCacheKey,
+} from './compare-render.ts';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -29,381 +35,124 @@ const pageState: CompareState = {
   pdfDoc2: null,
   currentPage: 1,
   viewMode: 'side-by-side',
+  overlayChangeScope: 'all',
+  overlayDocumentVisible: true,
   isSyncScroll: true,
   currentComparison: null,
   activeChangeIndex: 0,
   pagePairs: [],
   activeFilter: 'all',
+  categoryFilter: {
+    text: true,
+    image: true,
+    'header-footer': true,
+    annotation: true,
+    formatting: true,
+    background: true,
+  },
   changeSearchQuery: '',
   useOcr: true,
   ocrLanguage: 'eng',
+  zoomLevel: 1.0,
 };
 
-const pageModelCache = new Map<string, ComparePageModel>();
-const comparisonCache = new Map<string, ComparePageResult>();
-const comparisonResultsCache = new Map<number, ComparePageResult>();
+const caches: CompareCaches = {
+  pageModelCache: new LRUCache(COMPARE_CACHE_MAX_SIZE),
+  comparisonCache: new LRUCache(COMPARE_CACHE_MAX_SIZE),
+  comparisonResultsCache: new LRUCache(COMPARE_CACHE_MAX_SIZE),
+  ocrModelCache: new LRUCache(COMPARE_CACHE_MAX_SIZE),
+};
 const documentNames = {
   left: 'first.pdf',
   right: 'second.pdf',
 };
 
-type RenderedPage = {
-  model: ComparePageModel | null;
-  exists: boolean;
-};
-
-type ComparisonPageLoad = {
-  model: ComparePageModel | null;
-  exists: boolean;
-};
-
-type DiffFocusRegion = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-
-function getElement<T extends HTMLElement>(id: string) {
-  return document.getElementById(id) as T | null;
-}
-
-function clearCanvas(canvas: HTMLCanvasElement) {
-  const context = canvas.getContext('2d');
-  canvas.width = 1;
-  canvas.height = 1;
-  context?.clearRect(0, 0, 1, 1);
-}
-
-function renderMissingPage(
-  canvas: HTMLCanvasElement,
-  placeholderId: string,
-  message: string
-) {
-  clearCanvas(canvas);
-  const placeholder = getElement<HTMLDivElement>(placeholderId);
-  if (placeholder) {
-    placeholder.textContent = message;
-    placeholder.classList.remove('hidden');
-  }
-}
-
-function hidePlaceholder(placeholderId: string) {
-  const placeholder = getElement<HTMLDivElement>(placeholderId);
-  placeholder?.classList.add('hidden');
-}
-
-function getRenderScale(page: pdfjsLib.PDFPageProxy, container: HTMLElement) {
-  const baseViewport = page.getViewport({ scale: 1.0 });
-  const availableWidth = Math.max(
-    container.clientWidth - (pageState.viewMode === 'overlay' ? 96 : 56),
-    320
-  );
-  const fitScale = availableWidth / Math.max(baseViewport.width, 1);
-  const maxScale = pageState.viewMode === 'overlay' ? 2.5 : 2.0;
-
-  return Math.min(Math.max(fitScale, 1.0), maxScale);
-}
-
-function getPageModelCacheKey(
-  cacheKeyPrefix: 'left' | 'right',
-  pageNum: number,
-  scale: number
-) {
-  return `${cacheKeyPrefix}-${pageNum}-${scale.toFixed(3)}`;
-}
-
-function shouldUseOcrForModel(model: ComparePageModel) {
-  return !model.hasText || isLowQualityExtractedText(model.plainText);
-}
-
-function buildDiffFocusRegion(
-  comparison: ComparePageResult,
-  leftCanvas: HTMLCanvasElement,
-  rightCanvas: HTMLCanvasElement
-): DiffFocusRegion | undefined {
-  const leftOffsetX = Math.floor(
-    (Math.max(leftCanvas.width, rightCanvas.width) - leftCanvas.width) / 2
-  );
-  const leftOffsetY = Math.floor(
-    (Math.max(leftCanvas.height, rightCanvas.height) - leftCanvas.height) / 2
-  );
-  const rightOffsetX = Math.floor(
-    (Math.max(leftCanvas.width, rightCanvas.width) - rightCanvas.width) / 2
-  );
-  const rightOffsetY = Math.floor(
-    (Math.max(leftCanvas.height, rightCanvas.height) - rightCanvas.height) / 2
-  );
-  const bounds = {
-    minX: Infinity,
-    minY: Infinity,
-    maxX: -Infinity,
-    maxY: -Infinity,
-  };
-
-  for (const change of comparison.changes) {
-    for (const rect of change.beforeRects) {
-      bounds.minX = Math.min(bounds.minX, rect.x + leftOffsetX);
-      bounds.minY = Math.min(bounds.minY, rect.y + leftOffsetY);
-      bounds.maxX = Math.max(bounds.maxX, rect.x + leftOffsetX + rect.width);
-      bounds.maxY = Math.max(bounds.maxY, rect.y + leftOffsetY + rect.height);
-    }
-
-    for (const rect of change.afterRects) {
-      bounds.minX = Math.min(bounds.minX, rect.x + rightOffsetX);
-      bounds.minY = Math.min(bounds.minY, rect.y + rightOffsetY);
-      bounds.maxX = Math.max(bounds.maxX, rect.x + rightOffsetX + rect.width);
-      bounds.maxY = Math.max(bounds.maxY, rect.y + rightOffsetY + rect.height);
-    }
-  }
-
-  if (!Number.isFinite(bounds.minX)) {
-    return undefined;
-  }
-
-  const fullWidth = Math.max(leftCanvas.width, rightCanvas.width, 1);
-  const fullHeight = Math.max(leftCanvas.height, rightCanvas.height, 1);
-  const padding = 40;
-
-  const x = Math.max(Math.floor(bounds.minX - padding), 0);
-  const y = Math.max(Math.floor(bounds.minY - padding), 0);
-  const maxX = Math.min(Math.ceil(bounds.maxX + padding), fullWidth);
-  const maxY = Math.min(Math.ceil(bounds.maxY + padding), fullHeight);
-
-  return {
-    x,
-    y,
-    width: Math.max(maxX - x, Math.min(320, fullWidth)),
-    height: Math.max(maxY - y, Math.min(200, fullHeight)),
-  };
-}
-
-async function renderPage(
-  pdfDoc: pdfjsLib.PDFDocumentProxy,
-  pageNum: number,
-  canvas: HTMLCanvasElement,
-  container: HTMLElement,
-  placeholderId: string,
-  cacheKeyPrefix: 'left' | 'right'
-): Promise<RenderedPage> {
-  if (pageNum > pdfDoc.numPages) {
-    renderMissingPage(
-      canvas,
-      placeholderId,
-      `Page ${pageNum} does not exist in this PDF.`
-    );
-    return { model: null, exists: false };
-  }
-
-  const page = await pdfDoc.getPage(pageNum);
-
-  const targetScale = getRenderScale(page, container);
-  const scaledViewport = page.getViewport({ scale: targetScale });
-  const dpr = window.devicePixelRatio || 1;
-  const hiResViewport = page.getViewport({ scale: targetScale * dpr });
-
-  hidePlaceholder(placeholderId);
-
-  canvas.width = hiResViewport.width;
-  canvas.height = hiResViewport.height;
-  canvas.style.width = `${scaledViewport.width}px`;
-  canvas.style.height = `${scaledViewport.height}px`;
-
-  const cacheKey = getPageModelCacheKey(cacheKeyPrefix, pageNum, targetScale);
-  const cachedModel = pageModelCache.get(cacheKey);
-  const modelPromise = cachedModel
-    ? Promise.resolve(cachedModel)
-    : extractPageModel(page, scaledViewport);
-  const renderTask = page.render({
-    canvasContext: canvas.getContext('2d')!,
-    viewport: hiResViewport,
-    canvas,
-  }).promise;
-
-  const [model] = await Promise.all([modelPromise, renderTask]);
-
-  let finalModel = model;
-
-  if (!cachedModel && pageState.useOcr && shouldUseOcrForModel(model)) {
-    showLoader(`Running OCR on page ${pageNum}...`);
-    const ocrModel = await recognizePageCanvas(
-      canvas,
-      pageState.ocrLanguage,
-      function (status, progress) {
-        showLoader(`OCR: ${status}`, progress * 100);
-      }
-    );
-    finalModel = {
-      ...ocrModel,
-      pageNumber: pageNum,
-    };
-  }
-
-  pageModelCache.set(cacheKey, finalModel);
-
-  return { model: finalModel, exists: true };
-}
-
-async function loadComparisonPage(
-  pdfDoc: pdfjsLib.PDFDocumentProxy | null,
-  pageNum: number | null,
-  side: 'left' | 'right',
-  renderTarget?: {
-    canvas: HTMLCanvasElement;
-    container: HTMLElement;
-    placeholderId: string;
-  }
-): Promise<ComparisonPageLoad> {
-  if (!pdfDoc || !pageNum) {
-    if (renderTarget) {
-      renderMissingPage(
-        renderTarget.canvas,
-        renderTarget.placeholderId,
-        'No paired page for this side.'
-      );
-    }
-    return { model: null, exists: false };
-  }
-
-  if (renderTarget) {
-    return renderPage(
-      pdfDoc,
-      pageNum,
-      renderTarget.canvas,
-      renderTarget.container,
-      renderTarget.placeholderId,
-      side
-    );
-  }
-
-  const renderScale = 1.2;
-  const cacheKey = getPageModelCacheKey(side, pageNum, renderScale);
-  const cachedModel = pageModelCache.get(cacheKey);
-  if (cachedModel) {
-    return { model: cachedModel, exists: true };
-  }
-
-  const page = await pdfDoc.getPage(pageNum);
-  const viewport = page.getViewport({ scale: renderScale });
-  const canvas = document.createElement('canvas');
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-  const context = canvas.getContext('2d');
-
-  if (!context) {
-    throw new Error('Could not create offscreen comparison canvas.');
-  }
-
-  const extractedModel = await extractPageModel(page, viewport);
-  await page.render({
-    canvasContext: context,
-    viewport,
-    canvas,
-  }).promise;
-
-  let finalModel = extractedModel;
-  if (pageState.useOcr && shouldUseOcrForModel(extractedModel)) {
-    const ocrModel = await recognizePageCanvas(canvas, pageState.ocrLanguage);
-    finalModel = {
-      ...ocrModel,
-      pageNumber: pageNum,
-    };
-  }
-
-  pageModelCache.set(cacheKey, finalModel);
-  return { model: finalModel, exists: true };
-}
-
-async function computeComparisonForPair(
-  pair: ComparePagePair,
-  options?: {
-    renderTargets?: {
-      left: {
-        canvas: HTMLCanvasElement;
-        container: HTMLElement;
-        placeholderId: string;
-      };
-      right: {
-        canvas: HTMLCanvasElement;
-        container: HTMLElement;
-        placeholderId: string;
-      };
-      diffCanvas?: HTMLCanvasElement;
-    };
-  }
-) {
-  const renderTargets = options?.renderTargets;
-  const leftPage = await loadComparisonPage(
-    pageState.pdfDoc1,
-    pair.leftPageNumber,
-    'left',
-    renderTargets?.left
-  );
-  const rightPage = await loadComparisonPage(
-    pageState.pdfDoc2,
-    pair.rightPageNumber,
-    'right',
-    renderTargets?.right
-  );
-
-  const comparison = comparePageModels(leftPage.model, rightPage.model);
-  comparison.confidence = pair.confidence;
-
-  if (
-    renderTargets?.diffCanvas &&
-    comparison.status !== 'left-only' &&
-    comparison.status !== 'right-only'
-  ) {
-    const focusRegion = buildDiffFocusRegion(
-      comparison,
-      renderTargets.left.canvas,
-      renderTargets.right.canvas
-    );
-    comparison.visualDiff = renderVisualDiff(
-      renderTargets.left.canvas,
-      renderTargets.right.canvas,
-      renderTargets.diffCanvas,
-      focusRegion
-    );
-  } else if (renderTargets?.diffCanvas) {
-    clearCanvas(renderTargets.diffCanvas);
-  }
-
-  return comparison;
-}
+let renderGeneration = 0;
 
 function getActivePair() {
   return pageState.pagePairs[pageState.currentPage - 1] || null;
 }
 
+function getRenderContext(): CompareRenderContext {
+  return {
+    useOcr: pageState.useOcr,
+    ocrLanguage: pageState.ocrLanguage,
+    viewMode: pageState.viewMode,
+    zoomLevel: pageState.zoomLevel,
+    showLoader,
+  };
+}
+
+function getEffectiveCategoryFilter(): CompareCategoryFilterState {
+  if (
+    pageState.viewMode !== 'overlay' ||
+    pageState.overlayChangeScope !== 'content-only'
+  ) {
+    return pageState.categoryFilter;
+  }
+
+  return {
+    ...pageState.categoryFilter,
+    formatting: false,
+  };
+}
+
+function matchesActiveFilter(change: CompareTextChange) {
+  if (pageState.activeFilter === 'all') {
+    return true;
+  }
+
+  if (pageState.activeFilter === 'removed') {
+    return change.type === 'removed' || change.type === 'page-removed';
+  }
+
+  if (pageState.activeFilter === 'added') {
+    return change.type === 'added' || change.type === 'page-added';
+  }
+
+  return change.type === pageState.activeFilter;
+}
+
+function matchesSearch(change: CompareTextChange, searchQuery: string) {
+  if (!searchQuery) {
+    return true;
+  }
+
+  const searchableText = [
+    change.description,
+    change.beforeText,
+    change.afterText,
+  ]
+    .join(' ')
+    .toLowerCase();
+
+  return searchableText.includes(searchQuery);
+}
+
+function shouldIncludeChange(
+  change: CompareTextChange,
+  options: { includeSearch: boolean }
+) {
+  if (!matchesActiveFilter(change)) {
+    return false;
+  }
+
+  const effectiveCategoryFilter = getEffectiveCategoryFilter();
+  if (!effectiveCategoryFilter[change.category]) {
+    return false;
+  }
+
+  return options.includeSearch
+    ? matchesSearch(change, pageState.changeSearchQuery.trim().toLowerCase())
+    : true;
+}
+
 function getVisibleChanges(result: ComparePageResult | null) {
   if (!result) return [];
 
-  const filteredByType =
-    pageState.activeFilter === 'all'
-      ? result.changes
-      : result.changes.filter((change) => {
-          if (pageState.activeFilter === 'removed') {
-            return change.type === 'removed' || change.type === 'page-removed';
-          }
-          return change.type === pageState.activeFilter;
-        });
-
-  const searchQuery = pageState.changeSearchQuery.trim().toLowerCase();
-  if (!searchQuery) {
-    return filteredByType;
-  }
-
-  return filteredByType.filter((change) => {
-    const searchableText = [
-      change.description,
-      change.beforeText,
-      change.afterText,
-    ]
-      .join(' ')
-      .toLowerCase();
-    return searchableText.includes(searchQuery);
-  });
+  return result.changes.filter((change) =>
+    shouldIncludeChange(change, { includeSearch: true })
+  );
 }
 
 function updateFilterButtons() {
@@ -411,13 +160,94 @@ function updateFilterButtons() {
     { id: 'filter-modified', filter: 'modified' },
     { id: 'filter-added', filter: 'added' },
     { id: 'filter-removed', filter: 'removed' },
+    { id: 'filter-moved', filter: 'moved' },
+    { id: 'filter-style-changed', filter: 'style-changed' },
   ];
 
   pills.forEach(({ id, filter }) => {
     const button = getElement<HTMLButtonElement>(id);
     if (!button) return;
     button.classList.toggle('active', pageState.activeFilter === filter);
+    const isDisabled =
+      id === 'filter-style-changed' &&
+      pageState.viewMode === 'overlay' &&
+      pageState.overlayChangeScope === 'content-only';
+    button.disabled = isDisabled;
+    button.classList.toggle('opacity-50', isDisabled);
+    button.classList.toggle('cursor-not-allowed', isDisabled);
   });
+}
+
+function updateOverlayScopeButtons() {
+  const allButton = getElement<HTMLButtonElement>('overlay-scope-all');
+  const contentOnlyButton = getElement<HTMLButtonElement>(
+    'overlay-scope-content-only'
+  );
+
+  const applyState = (button: HTMLButtonElement | null, active: boolean) => {
+    if (!button) return;
+    button.classList.toggle('bg-indigo-600', active);
+    button.classList.toggle('bg-gray-700', !active);
+  };
+
+  applyState(allButton, pageState.overlayChangeScope === 'all');
+  applyState(
+    contentOnlyButton,
+    pageState.overlayChangeScope === 'content-only'
+  );
+}
+
+function updateExportMenuForViewMode() {
+  const overlayItems = document.querySelectorAll('.export-menu-item-overlay');
+  const sideItems = document.querySelectorAll('.export-menu-item-side');
+  const isOverlay = pageState.viewMode === 'overlay';
+
+  overlayItems.forEach((item) => {
+    item.classList.toggle('hidden', !isOverlay);
+  });
+  sideItems.forEach((item) => {
+    item.classList.toggle('hidden', isOverlay);
+  });
+}
+
+function updateOverlayPreviewState() {
+  const canvas2 = getElement<HTMLCanvasElement>('canvas-compare-2');
+  const panel2 = getElement<HTMLElement>('panel-2');
+  const opacitySlider = getElement<HTMLInputElement>('opacity-slider');
+  const activePair = getActivePair();
+  const hasLeftPage = Boolean(activePair?.leftPageNumber);
+  const hasRightPage = Boolean(activePair?.rightPageNumber);
+
+  if (!canvas2 || !panel2) {
+    return;
+  }
+
+  if (pageState.viewMode !== 'overlay') {
+    canvas2.style.opacity = '1';
+    panel2.style.opacity = '1';
+    return;
+  }
+
+  panel2.style.opacity = '1';
+
+  if (!hasRightPage) {
+    canvas2.style.opacity = '0';
+    return;
+  }
+
+  if (!hasLeftPage) {
+    canvas2.style.opacity = '1';
+    return;
+  }
+
+  if (pageState.overlayChangeScope === 'content-only') {
+    canvas2.style.opacity = '0';
+    return;
+  }
+
+  canvas2.style.opacity = pageState.overlayDocumentVisible
+    ? opacitySlider?.value || '0.5'
+    : '0';
 }
 
 function updateSummary() {
@@ -425,6 +255,10 @@ function updateSummary() {
   const addedCount = getElement<HTMLElement>('summary-added-count');
   const removedCount = getElement<HTMLElement>('summary-removed-count');
   const modifiedCount = getElement<HTMLElement>('summary-modified-count');
+  const movedCount = getElement<HTMLElement>('summary-moved-count');
+  const styleChangedCount = getElement<HTMLElement>(
+    'summary-style-changed-count'
+  );
   const panelLabel1 = getElement<HTMLElement>('compare-panel-label-1');
   const panelLabel2 = getElement<HTMLElement>('compare-panel-label-2');
 
@@ -435,6 +269,9 @@ function updateSummary() {
     if (addedCount) addedCount.textContent = '0';
     if (removedCount) removedCount.textContent = '0';
     if (modifiedCount) modifiedCount.textContent = '0';
+    if (movedCount) movedCount.textContent = '0';
+    if (styleChangedCount) styleChangedCount.textContent = '0';
+    updateCategoryPills(null);
     return;
   }
 
@@ -443,6 +280,35 @@ function updateSummary() {
     removedCount.textContent = comparison.summary.removed.toString();
   if (modifiedCount)
     modifiedCount.textContent = comparison.summary.modified.toString();
+  if (movedCount) movedCount.textContent = comparison.summary.moved.toString();
+  if (styleChangedCount)
+    styleChangedCount.textContent = comparison.summary.styleChanged.toString();
+
+  updateCategoryPills(comparison);
+}
+
+function updateCategoryPills(comparison: ComparePageResult | null) {
+  const categoryKeys: Array<keyof CompareCategoryFilterState> = [
+    'text',
+    'image',
+    'header-footer',
+    'annotation',
+    'formatting',
+    'background',
+  ];
+
+  const summary = comparison?.categorySummary;
+  const effectiveCategoryFilter = getEffectiveCategoryFilter();
+
+  for (const key of categoryKeys) {
+    const countEl = getElement<HTMLElement>(`category-count-${key}`);
+    const pill = getElement<HTMLButtonElement>(`category-${key}`);
+    if (countEl) countEl.textContent = summary ? summary[key].toString() : '0';
+    if (pill) {
+      pill.classList.toggle('active', effectiveCategoryFilter[key]);
+      pill.classList.toggle('disabled', !effectiveCategoryFilter[key]);
+    }
+  }
 }
 
 function renderHighlights() {
@@ -508,14 +374,16 @@ function renderChangeList() {
   const emptyState = getElement<HTMLDivElement>('change-list-empty');
   const prevChangeBtn = getElement<HTMLButtonElement>('prev-change-btn');
   const nextChangeBtn = getElement<HTMLButtonElement>('next-change-btn');
-  const exportReportBtn = getElement<HTMLButtonElement>('export-report-btn');
+  const exportDropdownBtn = getElement<HTMLButtonElement>(
+    'export-dropdown-btn'
+  );
 
   if (
     !list ||
     !emptyState ||
     !prevChangeBtn ||
     !nextChangeBtn ||
-    !exportReportBtn
+    !exportDropdownBtn
   )
     return;
 
@@ -531,43 +399,97 @@ function renderChangeList() {
     list.classList.add('hidden');
     prevChangeBtn.disabled = true;
     nextChangeBtn.disabled = true;
-    exportReportBtn.disabled = pageState.pagePairs.length === 0;
+    exportDropdownBtn.disabled = pageState.pagePairs.length === 0;
     return;
   }
 
   emptyState.classList.add('hidden');
   list.classList.remove('hidden');
 
+  const typeLabels: Record<string, string> = {
+    added: 'Added',
+    removed: 'Deleted',
+    modified: 'Modified',
+    moved: 'Moved',
+    'style-changed': 'Style Changed',
+    'page-added': 'Page Added',
+    'page-removed': 'Page Removed',
+  };
+
+  const grouped = new Map<
+    string,
+    Array<{ change: CompareTextChange; index: number }>
+  >();
   visibleChanges.forEach((change, index) => {
-    const item = document.createElement('div');
-    item.className = `compare-change-item${index === pageState.activeChangeIndex ? ' active' : ''}`;
-    item.innerHTML = `
-            <span class="compare-change-dot ${change.type}"></span>
-            <div class="compare-change-desc">
-                <div class="compare-change-desc-text">${change.description}</div>
-            </div>
-            <span class="compare-change-type ${change.type}">${change.type.replace('-', ' ')}</span>
-        `;
-
-    item.addEventListener('click', function () {
-      pageState.activeChangeIndex = index;
-      renderComparisonUI();
-      scrollToChange(change);
-    });
-
-    list.appendChild(item);
+    const key = change.type;
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key)!.push({ change, index });
   });
+
+  for (const [type, entries] of grouped) {
+    const header = document.createElement('div');
+    header.className = 'compare-section-header';
+    header.innerHTML = `
+      <span class="compare-section-label ${type}">${typeLabels[type] || type}</span>
+      <span class="compare-section-count">${entries.length}</span>
+      <span class="compare-section-line"></span>
+    `;
+    list.appendChild(header);
+
+    const arrowSvg =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256" fill="currentColor" style="display:inline-block;vertical-align:-2px;margin:0 2px;opacity:0.5"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"></path></svg>';
+
+    for (const { change, index } of entries) {
+      const item = document.createElement('div');
+      item.className = `compare-change-item${index === pageState.activeChangeIndex ? ' active' : ''}`;
+      const safeDesc = change.description
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>')
+        .replace(/→/g, arrowSvg);
+      item.innerHTML = `<div class="compare-change-desc">${safeDesc}</div>`;
+
+      item.addEventListener('click', function () {
+        pageState.activeChangeIndex = index;
+        renderComparisonUI();
+        scrollToChange(change);
+      });
+
+      list.appendChild(item);
+    }
+  }
 
   prevChangeBtn.disabled = false;
   nextChangeBtn.disabled = false;
-  exportReportBtn.disabled = pageState.pagePairs.length === 0;
+  exportDropdownBtn.disabled = pageState.pagePairs.length === 0;
 }
 
 function renderComparisonUI() {
+  updateOverlayScopeButtons();
+  updateExportMenuForViewMode();
   updateFilterButtons();
   renderHighlights();
   renderChangeList();
   updateSummary();
+  updateOverlayPreviewState();
+  syncComparePaneHeights();
+}
+
+function syncComparePaneHeights() {
+  const wrapper = getElement<HTMLElement>('compare-viewer-wrapper');
+  const sidebar = document.querySelector<HTMLElement>('.compare-sidebar');
+
+  if (!wrapper || !sidebar) {
+    return;
+  }
+
+  if (window.innerWidth <= 1023) {
+    wrapper.style.height = '';
+    return;
+  }
+
+  wrapper.style.height = `${sidebar.offsetHeight}px`;
 }
 
 async function buildPagePairs() {
@@ -594,40 +516,37 @@ async function buildPagePairs() {
     }
   );
 
-  pageState.pagePairs = pairPages(leftSignatures, rightSignatures);
+  pageState.pagePairs = await pairPagesAsync(leftSignatures, rightSignatures);
   pageState.currentPage = 1;
 }
 
 async function buildReportResults() {
   const results: ComparePageResult[] = [];
+  const ctx = getRenderContext();
 
   for (const pair of pageState.pagePairs) {
-    const cached = comparisonResultsCache.get(pair.pairIndex);
+    const cached = caches.comparisonResultsCache.get(pair.pairIndex);
     if (cached) {
       results.push(cached);
       continue;
     }
 
-    const leftSignatureKey = pair.leftPageNumber
-      ? `left-${pair.leftPageNumber}`
-      : '';
-    const rightSignatureKey = pair.rightPageNumber
-      ? `right-${pair.rightPageNumber}`
-      : '';
-    const cachedResult = comparisonCache.get(
-      `${leftSignatureKey || 'none'}:${rightSignatureKey || 'none'}:${pageState.useOcr ? 'ocr' : 'no-ocr'}`
-    );
+    const cacheKey = getComparisonCacheKey(pair, pageState.useOcr);
+    const cachedResult = caches.comparisonCache.get(cacheKey);
     if (cachedResult) {
       results.push(cachedResult);
       continue;
     }
 
-    const comparison = await computeComparisonForPair(pair);
-    comparisonCache.set(
-      `${leftSignatureKey || 'none'}:${rightSignatureKey || 'none'}:${pageState.useOcr ? 'ocr' : 'no-ocr'}`,
-      comparison
+    const comparison = await computeComparisonForPair(
+      pageState.pdfDoc1,
+      pageState.pdfDoc2,
+      pair,
+      caches,
+      ctx
     );
-    comparisonResultsCache.set(pair.pairIndex, comparison);
+    caches.comparisonCache.set(cacheKey, comparison);
+    caches.comparisonResultsCache.set(pair.pairIndex, comparison);
     results.push(comparison);
   }
 
@@ -639,6 +558,8 @@ async function renderBothPages() {
 
   const pair = getActivePair();
   if (!pair) return;
+
+  const gen = ++renderGeneration;
 
   showLoader(
     `Loading comparison ${pageState.currentPage} of ${pageState.pagePairs.length}...`
@@ -652,27 +573,35 @@ async function renderBothPages() {
   ) as HTMLCanvasElement;
   const panel1 = getElement<HTMLElement>('panel-1') as HTMLElement;
   const panel2 = getElement<HTMLElement>('panel-2') as HTMLElement;
-  const wrapper = getElement<HTMLElement>(
-    'compare-viewer-wrapper'
-  ) as HTMLElement;
 
   const container1 = panel1;
   const container2 = pageState.viewMode === 'overlay' ? panel1 : panel2;
 
-  const comparison = await computeComparisonForPair(pair, {
-    renderTargets: {
-      left: {
-        canvas: canvas1,
-        container: container1,
-        placeholderId: 'placeholder-1',
+  const ctx = getRenderContext();
+
+  const comparison = await computeComparisonForPair(
+    pageState.pdfDoc1,
+    pageState.pdfDoc2,
+    pair,
+    caches,
+    ctx,
+    {
+      renderTargets: {
+        left: {
+          canvas: canvas1,
+          container: container1,
+          placeholderId: 'placeholder-1',
+        },
+        right: {
+          canvas: canvas2,
+          container: container2,
+          placeholderId: 'placeholder-2',
+        },
       },
-      right: {
-        canvas: canvas2,
-        container: container2,
-        placeholderId: 'placeholder-2',
-      },
-    },
-  });
+    }
+  );
+
+  if (gen !== renderGeneration) return;
 
   pageState.currentComparison = comparison;
   pageState.activeChangeIndex = 0;
@@ -736,8 +665,7 @@ function setViewMode(mode: 'overlay' | 'side-by-side') {
       btnSide.classList.add('bg-gray-700');
     }
     if (canvas2 && opacitySlider) {
-      const panel2 = getElement<HTMLElement>('panel-2');
-      if (panel2) panel2.style.opacity = opacitySlider.value;
+      canvas2.style.transition = 'opacity 150ms ease-in-out';
     }
     pageState.isSyncScroll = true;
   } else {
@@ -758,6 +686,11 @@ function setViewMode(mode: 'overlay' | 'side-by-side') {
     const panel2 = getElement<HTMLElement>('panel-2');
     if (panel2) panel2.style.opacity = '1';
   }
+
+  updateOverlayScopeButtons();
+  updateExportMenuForViewMode();
+  updateOverlayPreviewState();
+  syncComparePaneHeights();
 
   const p1 = getElement<HTMLElement>('panel-1');
   const p2 = getElement<HTMLElement>('panel-2');
@@ -815,9 +748,9 @@ async function handleFileInput(
       showLoader(`Loading ${file.name}...`);
       const arrayBuffer = await file.arrayBuffer();
       pageState[docKey] = await getPDFDocument({ data: arrayBuffer }).promise;
-      pageModelCache.clear();
-      comparisonCache.clear();
-      comparisonResultsCache.clear();
+      caches.pageModelCache.clear();
+      caches.comparisonCache.clear();
+      caches.comparisonResultsCache.clear();
       pageState.changeSearchQuery = '';
 
       const searchInput = getElement<HTMLInputElement>('compare-search-input');
@@ -880,7 +813,7 @@ document.addEventListener('DOMContentLoaded', function () {
     prevBtn.addEventListener('click', function () {
       if (pageState.currentPage > 1) {
         pageState.currentPage--;
-        renderBothPages();
+        renderBothPages().catch(console.error);
       }
     });
   }
@@ -895,7 +828,7 @@ document.addEventListener('DOMContentLoaded', function () {
         );
       if (pageState.currentPage < totalPairs) {
         pageState.currentPage++;
-        renderBothPages();
+        renderBothPages().catch(console.error);
       }
     });
   }
@@ -923,28 +856,17 @@ document.addEventListener('DOMContentLoaded', function () {
     'opacity-slider'
   ) as HTMLInputElement;
 
-  // Track flicker state
-  let flickerVisible = true;
-
   if (flickerBtn) {
     flickerBtn.addEventListener('click', function () {
-      flickerVisible = !flickerVisible;
-      const p2 = getElement<HTMLElement>('panel-2');
-      if (p2) {
-        p2.style.transition = 'opacity 150ms ease-in-out';
-        p2.style.opacity = flickerVisible ? opacitySlider?.value || '0.5' : '0';
-      }
+      pageState.overlayDocumentVisible = !pageState.overlayDocumentVisible;
+      updateOverlayPreviewState();
     });
   }
 
   if (opacitySlider) {
     opacitySlider.addEventListener('input', function () {
-      flickerVisible = true;
-      const p2 = getElement<HTMLElement>('panel-2');
-      if (p2) {
-        p2.style.transition = '';
-        p2.style.opacity = opacitySlider.value;
-      }
+      pageState.overlayDocumentVisible = true;
+      updateOverlayPreviewState();
     });
   }
 
@@ -955,14 +877,24 @@ document.addEventListener('DOMContentLoaded', function () {
   ) as HTMLInputElement;
   const prevChangeBtn = getElement<HTMLButtonElement>('prev-change-btn');
   const nextChangeBtn = getElement<HTMLButtonElement>('next-change-btn');
-  const exportReportBtn = getElement<HTMLButtonElement>('export-report-btn');
+  const exportDropdownBtn = getElement<HTMLButtonElement>(
+    'export-dropdown-btn'
+  );
+  const exportDropdownMenu = getElement<HTMLDivElement>('export-dropdown-menu');
   const ocrToggle = getElement<HTMLInputElement>('ocr-toggle');
+  const overlayOcrToggle = getElement<HTMLInputElement>('overlay-ocr-toggle');
   const searchInput = getElement<HTMLInputElement>('compare-search-input');
+  const overlayAllBtn = getElement<HTMLButtonElement>('overlay-scope-all');
+  const overlayContentOnlyBtn = getElement<HTMLButtonElement>(
+    'overlay-scope-content-only'
+  );
 
   const filterButtons: Array<{ id: string; filter: CompareFilterType }> = [
     { id: 'filter-modified', filter: 'modified' },
     { id: 'filter-added', filter: 'added' },
     { id: 'filter-removed', filter: 'removed' },
+    { id: 'filter-moved', filter: 'moved' },
+    { id: 'filter-style-changed', filter: 'style-changed' },
   ];
 
   if (syncToggle) {
@@ -1020,10 +952,70 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  const ZOOM_STEP = 0.25;
+  const ZOOM_MIN = 0.25;
+  const ZOOM_MAX = 5.0;
+  const zoomInBtn = getElement<HTMLButtonElement>('zoom-in-btn');
+  const zoomOutBtn = getElement<HTMLButtonElement>('zoom-out-btn');
+  const zoomResetBtn = getElement<HTMLButtonElement>('zoom-reset-btn');
+  const zoomDisplay = getElement<HTMLElement>('zoom-level-display');
+
+  function updateZoomDisplay() {
+    if (zoomDisplay) {
+      zoomDisplay.textContent = `${Math.round(pageState.zoomLevel * 100)}%`;
+    }
+    if (zoomOutBtn) zoomOutBtn.disabled = pageState.zoomLevel <= ZOOM_MIN;
+    if (zoomInBtn) zoomInBtn.disabled = pageState.zoomLevel >= ZOOM_MAX;
+  }
+
+  function applyZoom() {
+    updateZoomDisplay();
+    caches.pageModelCache.clear();
+    caches.comparisonCache.clear();
+    caches.comparisonResultsCache.clear();
+    if (pageState.pdfDoc1 && pageState.pdfDoc2) {
+      renderBothPages().catch(console.error);
+    }
+  }
+
+  if (zoomInBtn) {
+    zoomInBtn.addEventListener('click', function () {
+      pageState.zoomLevel = Math.min(
+        Math.round((pageState.zoomLevel + ZOOM_STEP) * 100) / 100,
+        ZOOM_MAX
+      );
+      applyZoom();
+    });
+  }
+
+  if (zoomOutBtn) {
+    zoomOutBtn.addEventListener('click', function () {
+      pageState.zoomLevel = Math.max(
+        Math.round((pageState.zoomLevel - ZOOM_STEP) * 100) / 100,
+        ZOOM_MIN
+      );
+      applyZoom();
+    });
+  }
+
+  if (zoomResetBtn) {
+    zoomResetBtn.addEventListener('click', function () {
+      pageState.zoomLevel = 1.0;
+      applyZoom();
+    });
+  }
+
   filterButtons.forEach(({ id, filter }) => {
     const button = getElement<HTMLButtonElement>(id);
     if (!button) return;
     button.addEventListener('click', function () {
+      if (
+        filter === 'style-changed' &&
+        pageState.viewMode === 'overlay' &&
+        pageState.overlayChangeScope === 'content-only'
+      ) {
+        return;
+      }
       if (pageState.activeFilter === filter) {
         pageState.activeFilter = 'all';
       } else {
@@ -1034,16 +1026,86 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  if (ocrToggle) {
-    ocrToggle.checked = pageState.useOcr;
-    ocrToggle.addEventListener('change', async function () {
-      pageState.useOcr = ocrToggle.checked;
-      pageModelCache.clear();
-      comparisonCache.clear();
-      comparisonResultsCache.clear();
+  const categoryKeys: Array<keyof CompareCategoryFilterState> = [
+    'text',
+    'image',
+    'header-footer',
+    'annotation',
+    'formatting',
+    'background',
+  ];
+
+  for (const key of categoryKeys) {
+    const pill = getElement<HTMLButtonElement>(`category-${key}`);
+    if (pill) {
+      pill.addEventListener('click', function () {
+        if (
+          key === 'formatting' &&
+          pageState.viewMode === 'overlay' &&
+          pageState.overlayChangeScope === 'content-only'
+        ) {
+          return;
+        }
+        pageState.categoryFilter[key] = !pageState.categoryFilter[key];
+        pageState.activeChangeIndex = 0;
+        renderComparisonUI();
+      });
+    }
+  }
+
+  if (overlayAllBtn) {
+    overlayAllBtn.addEventListener('click', function () {
+      pageState.overlayChangeScope = 'all';
+      pageState.activeChangeIndex = 0;
+      pageState.overlayDocumentVisible = true;
+      renderComparisonUI();
+    });
+  }
+
+  if (overlayContentOnlyBtn) {
+    overlayContentOnlyBtn.addEventListener('click', function () {
+      pageState.overlayChangeScope = 'content-only';
+      if (pageState.activeFilter === 'style-changed') {
+        pageState.activeFilter = 'all';
+      }
+      pageState.activeChangeIndex = 0;
+      pageState.overlayDocumentVisible = false;
+      renderComparisonUI();
+    });
+  }
+
+  async function handleOcrToggleChange(nextValue: boolean) {
+    try {
+      pageState.useOcr = nextValue;
+      if (ocrToggle) {
+        ocrToggle.checked = nextValue;
+      }
+      if (overlayOcrToggle) {
+        overlayOcrToggle.checked = nextValue;
+      }
+      caches.pageModelCache.clear();
+      caches.comparisonCache.clear();
+      caches.comparisonResultsCache.clear();
       if (pageState.pdfDoc1 && pageState.pdfDoc2) {
         await renderBothPages();
       }
+    } catch (e) {
+      console.error('OCR toggle failed:', e);
+      hideLoader();
+    }
+  }
+
+  if (ocrToggle) {
+    ocrToggle.checked = pageState.useOcr;
+    ocrToggle.addEventListener('change', async function () {
+      await handleOcrToggleChange(ocrToggle.checked);
+    });
+  }
+
+  if (overlayOcrToggle) {
+    overlayOcrToggle.checked = pageState.useOcr;
+    overlayOcrToggle.addEventListener('change', async function () {
+      await handleOcrToggleChange(overlayOcrToggle.checked);
     });
   }
 
@@ -1058,31 +1120,88 @@ document.addEventListener('DOMContentLoaded', function () {
   let resizeFrame = 0;
   window.addEventListener('resize', function () {
     if (!pageState.pdfDoc1 || !pageState.pdfDoc2) {
+      syncComparePaneHeights();
       return;
     }
 
     window.cancelAnimationFrame(resizeFrame);
     resizeFrame = window.requestAnimationFrame(function () {
-      renderBothPages();
+      syncComparePaneHeights();
+      renderBothPages().catch(console.error);
     });
   });
 
-  if (exportReportBtn) {
-    exportReportBtn.addEventListener('click', async function () {
-      if (pageState.pagePairs.length === 0) return;
-      showLoader('Building compare report...');
-      const results = await buildReportResults();
-      exportCompareHtmlReport(
-        documentNames.left,
-        documentNames.right,
-        pageState.pagePairs,
-        results
-      );
-      hideLoader();
+  const sidebar = document.querySelector<HTMLElement>('.compare-sidebar');
+  if (sidebar && typeof ResizeObserver !== 'undefined') {
+    const resizeObserver = new ResizeObserver(function () {
+      syncComparePaneHeights();
+    });
+    resizeObserver.observe(sidebar);
+  }
+
+  if (exportDropdownBtn && exportDropdownMenu) {
+    exportDropdownBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      exportDropdownMenu.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', function () {
+      exportDropdownMenu.classList.add('hidden');
+    });
+
+    exportDropdownMenu.addEventListener('click', function (e) {
+      e.stopPropagation();
+    });
+
+    document.querySelectorAll('.export-menu-item').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        const mode = (btn as HTMLElement).dataset
+          .exportMode as ComparePdfExportMode;
+        if (!mode || pageState.pagePairs.length === 0) return;
+        exportDropdownMenu.classList.add('hidden');
+        try {
+          showLoader('Preparing PDF export...');
+          await exportComparePdf(
+            mode,
+            pageState.pdfDoc1,
+            pageState.pdfDoc2,
+            pageState.pagePairs,
+            function (message, percent) {
+              showLoader(message, percent);
+            },
+            {
+              useOcr: pageState.useOcr,
+              ocrLanguage: pageState.ocrLanguage,
+              showOverlayDocument:
+                pageState.viewMode === 'overlay'
+                  ? pageState.overlayChangeScope === 'all' &&
+                    pageState.overlayDocumentVisible
+                  : undefined,
+              overlayOpacity:
+                pageState.viewMode === 'overlay'
+                  ? Number.parseFloat(opacitySlider?.value || '0.5')
+                  : undefined,
+              includeChange:
+                pageState.viewMode === 'overlay'
+                  ? (change) =>
+                      shouldIncludeChange(change, { includeSearch: false })
+                  : undefined,
+            }
+          );
+        } catch (e) {
+          console.error('PDF export failed:', e);
+          showAlert('Export Error', 'Could not export comparison PDF.');
+        } finally {
+          hideLoader();
+        }
+      });
     });
   }
 
   createIcons({ icons });
   updateFilterButtons();
+  updateOverlayScopeButtons();
+  updateExportMenuForViewMode();
+  syncComparePaneHeights();
   setViewMode(pageState.viewMode);
 });
