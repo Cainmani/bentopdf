@@ -120,8 +120,11 @@ git merge upstream/main
 - `.env.prod.example` — production env template with Keycloak setup instructions
 - `docker-compose.yml` — upstream default (BentoPDF only, no auth)
 - `docs/adr/001-adopt-bentopdf-as-pdf-toolkit.md` — ADR for adoption decision
+- `docs/adr/002-fork-guardrails-upstream-protection.md` — ADR for fork safety guardrails
 - `.github/workflows/ci-cd.yml` — TruffleHog secrets scan + auto-deploy on merge
 - `.claude/commands/` — shared Claude Code slash commands (`/audit`, `/review`, `/safe-pr`)
+- `.claude/hooks/validate-gh-repo.sh` — PreToolUse hook blocking `gh` commands without `--repo`
+- `.claude/settings.json` — Claude Code project settings (hooks configuration)
 
 ## Key References
 
@@ -254,6 +257,15 @@ Last synced: commit 3a985f7 — 2026-03-23
 ---
 
 ## Common Gotchas
+
+### Fork Safety — `gh` CLI Defaults to Upstream
+- **`gh` CLI in forks defaults to upstream** — without `--repo`, commands like `gh pr create` and `gh issue create` target `alam00000/bentopdf` instead of `Cainmani/bentopdf`. This has caused real incidents (accidental upstream PR #549, broken upstream-sync workflow).
+- **MANDATORY after cloning:** Run `gh repo set-default Cainmani/bentopdf` in every new clone. This sets the `gh-resolved` marker in `.git/config` so all `gh` commands default to the fork.
+- **Three layers of protection are in place** (see ADR-002):
+  1. `gh repo set-default` — local development (must be run per-clone)
+  2. `GH_REPO` env var + `--repo` flags — CI workflows
+  3. Claude Code `PreToolUse` hook — blocks `gh pr/issue create` without `--repo Cainmani/bentopdf`
+- **GitHub PRs cannot be deleted** — only GitHub Support can remove them, and only for sensitive content. Prevention is the only viable strategy.
 
 ### BentoPDF / Deployment-Specific
 - **forwardAuth must point at root `/`** — not `/oauth2/auth`. The root endpoint lets oauth2-proxy handle Keycloak redirects internally with correct HTTPS URLs. Using `/oauth2/auth` + Traefik errors middleware breaks behind Cloudflare (produces `http://` redirect URLs).
