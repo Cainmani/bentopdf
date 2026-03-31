@@ -3,13 +3,9 @@
 # =============================================================================
 # Runs weekly and on manual trigger. Checks for:
 #   1. New commits in upstream (alam00000/bentopdf)
-#   2. New Docker image available on GHCR
-# Opens an issue if either is detected.
-#
-# GUARDRAIL: This is a FORK. All gh CLI commands MUST target Cainmani/bentopdf.
-# GH_REPO is set at the job level as a safety net — gh will default to our
-# repo even if --repo is accidentally omitted. All gh commands also use
-# explicit --repo flags as defense-in-depth.
+#   2. New Docker image available on GHCR (verified from official source)
+# Results are written to the workflow run summary (Actions tab).
+# No issues or PRs are created — this is a read-only check.
 # =============================================================================
 
 name: Upstream Sync Check
@@ -21,25 +17,15 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   check-upstream:
     runs-on: [self-hosted, cainmani]
     env:
-      # GUARDRAIL: Force all gh CLI commands to target our fork, not upstream.
-      # This prevents accidental issue/PR creation on alam00000/bentopdf.
-      GH_REPO: ${{ github.repository }}
-      PROD_IMAGE: ghcr.io/alam00000/bentopdf:latest
+      # Official upstream image — only alam00000 can push to this GHCR namespace
+      PROD_IMAGE: ghcr.io/alam00000/bentopdf
+      PROD_TAG: latest
     steps:
-      - name: Verify target repository
-        run: |
-          if [ "$GH_REPO" = "alam00000/bentopdf" ]; then
-            echo "::error::FATAL: GH_REPO points to upstream repo. This workflow must only target the fork."
-            exit 1
-          fi
-          echo "Target repository: $GH_REPO"
-
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
@@ -62,7 +48,6 @@ jobs:
             echo "up_to_date=false" >> "$GITHUB_OUTPUT"
             echo "count=$COUNT" >> "$GITHUB_OUTPUT"
 
-            # Save commit list for the issue body
             EOF_MARKER=$(dd if=/dev/urandom bs=15 count=1 2>/dev/null | base64)
             echo "commits<<$EOF_MARKER" >> "$GITHUB_OUTPUT"
             echo "$COMMITS" >> "$GITHUB_OUTPUT"
@@ -74,89 +59,97 @@ jobs:
       - name: Check for new Docker image
         id: check-image
         run: |
-          # Get the digest of the currently deployed image
-          DEPLOYED_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$PROD_IMAGE" 2>/dev/null | sed 's/.*@//' || echo "not-deployed")
+          IMAGE="${PROD_IMAGE}:${PROD_TAG}"
 
-          # Pull latest manifest without downloading the full image
-          docker pull "$PROD_IMAGE" > /dev/null 2>&1
-          LATEST_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$PROD_IMAGE" 2>/dev/null | sed 's/.*@//' || echo "unknown")
+          # Verify we're pulling from the official GHCR namespace
+          if [[ "$PROD_IMAGE" != ghcr.io/alam00000/* ]]; then
+            echo "::error::Image source is not the official upstream namespace (ghcr.io/alam00000/). Aborting."
+            exit 1
+          fi
 
-          if [ "$DEPLOYED_DIGEST" = "$LATEST_DIGEST" ]; then
+          # Get digest of currently running container (if any)
+          RUNNING_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE" 2>/dev/null | sed 's/.*@//' || echo "none")
+
+          # Fetch the latest digest from the registry without pulling the full image
+          # docker buildx imagetools inspect gives us the digest from the registry manifest
+          LATEST_DIGEST=$(docker buildx imagetools inspect "$IMAGE" 2>/dev/null | grep -m1 "^Digest:" | awk '{print $2}' || echo "unknown")
+
+          if [ "$LATEST_DIGEST" = "unknown" ]; then
+            echo "::warning::Could not fetch latest image digest from registry."
+            echo "image_updated=false" >> "$GITHUB_OUTPUT"
+          elif [ "$RUNNING_DIGEST" = "$LATEST_DIGEST" ]; then
             echo "image_updated=false" >> "$GITHUB_OUTPUT"
             echo "Docker image is up to date."
           else
             echo "image_updated=true" >> "$GITHUB_OUTPUT"
-            echo "deployed_digest=${DEPLOYED_DIGEST:0:19}" >> "$GITHUB_OUTPUT"
-            echo "latest_digest=${LATEST_DIGEST:0:19}" >> "$GITHUB_OUTPUT"
+            echo "running_digest=$RUNNING_DIGEST" >> "$GITHUB_OUTPUT"
+            echo "latest_digest=$LATEST_DIGEST" >> "$GITHUB_OUTPUT"
             echo "New Docker image available!"
-            echo "  Deployed: $DEPLOYED_DIGEST"
+            echo "  Running:  $RUNNING_DIGEST"
             echo "  Latest:   $LATEST_DIGEST"
           fi
 
-      - name: Create or update issue
-        if: steps.check-commits.outputs.up_to_date == 'false' || steps.check-image.outputs.image_updated == 'true'
+      - name: Write summary
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMITS_AVAILABLE: ${{ steps.check-commits.outputs.up_to_date == 'false' }}
           COMMIT_COUNT: ${{ steps.check-commits.outputs.count }}
           COMMITS: ${{ steps.check-commits.outputs.commits }}
           IMAGE_UPDATED: ${{ steps.check-image.outputs.image_updated }}
-          DEPLOYED_DIGEST: ${{ steps.check-image.outputs.deployed_digest }}
+          RUNNING_DIGEST: ${{ steps.check-image.outputs.running_digest }}
           LATEST_DIGEST: ${{ steps.check-image.outputs.latest_digest }}
         run: |
-          # Build title
-          PARTS=""
-          if [ "$COMMITS_AVAILABLE" = "true" ]; then
-            PARTS="${COMMIT_COUNT} new commit(s)"
+          # Nothing to report
+          if [ "$COMMITS_AVAILABLE" != "true" ] && [ "$IMAGE_UPDATED" != "true" ]; then
+            echo "### ✅ Up to date" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "No new upstream commits or Docker image updates." >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Image:** \`${PROD_IMAGE}:${PROD_TAG}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Source:** [alam00000/bentopdf](https://github.com/alam00000/bentopdf)" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
           fi
+
+          echo "### ⚠️ Upstream updates available" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$COMMITS_AVAILABLE" = "true" ]; then
+            echo "#### New commits" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "**${COMMIT_COUNT}** new commit(s) in [alam00000/bentopdf](https://github.com/alam00000/bentopdf) since last sync." >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "<details><summary>Commit list</summary>" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "$COMMITS" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "</details>" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
           if [ "$IMAGE_UPDATED" = "true" ]; then
-            [ -n "$PARTS" ] && PARTS="$PARTS + "
-            PARTS="${PARTS}new Docker image"
+            echo "#### New Docker image" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "A new version of \`${PROD_IMAGE}:${PROD_TAG}\` is available from the official upstream registry." >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "| | Digest |" >> "$GITHUB_STEP_SUMMARY"
+            echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+            echo "| **Running** | \`${RUNNING_DIGEST}\` |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| **Latest** | \`${LATEST_DIGEST}\` |" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
           fi
-          TITLE="Upstream sync: ${PARTS} available"
 
-          # Build body
-          BODY="## Upstream changes detected"$'\n\n'
-
+          echo "#### To update" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo '```bash' >> "$GITHUB_STEP_SUMMARY"
           if [ "$COMMITS_AVAILABLE" = "true" ]; then
-            BODY="${BODY}### New commits"$'\n\n'
-            BODY="${BODY}**${COMMIT_COUNT}** new commit(s) in [alam00000/bentopdf](https://github.com/alam00000/bentopdf) since our last sync."$'\n\n'
-            BODY="${BODY}\`\`\`"$'\n'
-            BODY="${BODY}${COMMITS}"$'\n'
-            BODY="${BODY}\`\`\`"$'\n\n'
+            echo "# Merge upstream commits" >> "$GITHUB_STEP_SUMMARY"
+            echo "git fetch upstream" >> "$GITHUB_STEP_SUMMARY"
+            echo "git merge upstream/main" >> "$GITHUB_STEP_SUMMARY"
+            echo "git push origin main" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
           fi
-
-          if [ "$IMAGE_UPDATED" = "true" ]; then
-            BODY="${BODY}### New Docker image"$'\n\n'
-            BODY="${BODY}A new version of \`ghcr.io/alam00000/bentopdf:latest\` is available."$'\n\n'
-            BODY="${BODY}| | Digest |"$'\n'
-            BODY="${BODY}|---|---|"$'\n'
-            BODY="${BODY}| **Deployed** | \`${DEPLOYED_DIGEST}\` |"$'\n'
-            BODY="${BODY}| **Latest** | \`${LATEST_DIGEST}\` |"$'\n\n'
-          fi
-
-          BODY="${BODY}### To update"$'\n\n'
-          BODY="${BODY}\`\`\`bash"$'\n'
-          if [ "$COMMITS_AVAILABLE" = "true" ]; then
-            BODY="${BODY}# Merge upstream commits"$'\n'
-            BODY="${BODY}git fetch upstream"$'\n'
-            BODY="${BODY}git merge upstream/main"$'\n'
-            BODY="${BODY}git push origin main"$'\n\n'
-          fi
-          BODY="${BODY}# On server: pull latest image and restart"$'\n'
-          BODY="${BODY}docker compose -f docker-compose.prod.yml pull bentopdf"$'\n'
-          BODY="${BODY}docker compose -f docker-compose.prod.yml up -d"$'\n'
-          BODY="${BODY}\`\`\`"$'\n\n'
-          BODY="${BODY}_This issue was created automatically by the upstream sync check workflow._"
-
-          # Close any existing upstream sync issues first
-          gh issue list --repo "${{ github.repository }}" --label "upstream-sync" --state open --json number --jq '.[].number' | while read -r num; do
-            gh issue close "$num" --repo "${{ github.repository }}" --comment "Superseded by new check."
-          done
-
-          # Create new issue
-          gh issue create \
-            --repo "${{ github.repository }}" \
-            --title "$TITLE" \
-            --body "$BODY" \
-            --label "upstream-sync"
+          echo "# On server: pull latest image and restart" >> "$GITHUB_STEP_SUMMARY"
+          echo "docker compose -f docker-compose.prod.yml pull bentopdf" >> "$GITHUB_STEP_SUMMARY"
+          echo "docker compose -f docker-compose.prod.yml up -d" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
