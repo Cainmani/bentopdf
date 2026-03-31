@@ -80,12 +80,13 @@ jobs:
           )
 
           # Close any existing upstream sync issues first
-          gh issue list --label "upstream-sync" --state open --json number --jq '.[].number' | while read -r num; do
-            gh issue close "$num" --comment "Superseded by new check."
+          gh issue list --repo "${{ github.repository }}" --label "upstream-sync" --state open --json number --jq '.[].number' | while read -r num; do
+            gh issue close "$num" --repo "${{ github.repository }}" --comment "Superseded by new check."
           done
 
           # Create new issue
           gh issue create \
+            --repo "${{ github.repository }}" \
             --title "$TITLE" \
             --body "$BODY" \
             --label "upstream-sync"
