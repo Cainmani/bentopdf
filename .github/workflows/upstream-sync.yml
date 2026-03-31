@@ -1,8 +1,13 @@
 # =============================================================================
 # Upstream Sync Check — BentoPDF (Cainmani)
 # =============================================================================
-# Runs daily and on manual trigger. Compares our main branch against
+# Runs weekly and on manual trigger. Compares our main branch against
 # upstream (alam00000/bentopdf) and opens an issue if new commits exist.
+#
+# GUARDRAIL: This is a FORK. All gh CLI commands MUST target Cainmani/bentopdf.
+# GH_REPO is set at the job level as a safety net — gh will default to our
+# repo even if --repo is accidentally omitted. All gh commands also use
+# explicit --repo flags as defense-in-depth.
 # =============================================================================
 
 name: Upstream Sync Check
@@ -19,7 +24,19 @@ permissions:
 jobs:
   check-upstream:
     runs-on: [self-hosted, cainmani]
+    env:
+      # GUARDRAIL: Force all gh CLI commands to target our fork, not upstream.
+      # This prevents accidental issue/PR creation on alam00000/bentopdf.
+      GH_REPO: ${{ github.repository }}
     steps:
+      - name: Verify target repository
+        run: |
+          if [ "$GH_REPO" = "alam00000/bentopdf" ]; then
+            echo "::error::FATAL: GH_REPO points to upstream repo. This workflow must only target the fork."
+            exit 1
+          fi
+          echo "Target repository: $GH_REPO"
+
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
