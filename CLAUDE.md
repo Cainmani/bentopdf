@@ -158,7 +158,9 @@ User Browser --> Keycloak (via oauth2-proxy) --> BentoPDF (nginx static files)
 - **Production compose:** `docker-compose.prod.yml` (oauth2-proxy + BentoPDF via Traefik forwardAuth)
 - **Env template:** `.env.prod.example`
 - **CI/CD:** `.github/workflows/ci-cd.yml` (TruffleHog + auto-deploy on merge)
+- **Upstream sync:** `.github/workflows/upstream-sync.yml` (weekly check for new commits + Docker image)
 - **ADR:** `docs-cainmani/adr/001-adopt-bentopdf-as-pdf-toolkit.md`
+- **Trivy scan:** Disabled — upstream runs it on their images; we deploy their pre-built image, not ours
 
 ### Pre-Deployment Audit
 
