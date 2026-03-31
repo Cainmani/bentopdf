@@ -119,8 +119,8 @@ git merge upstream/main
 - `docker-compose.prod.yml` — production compose (oauth2-proxy + BentoPDF via Traefik forwardAuth)
 - `.env.prod.example` — production env template with Keycloak setup instructions
 - `docker-compose.yml` — upstream default (BentoPDF only, no auth)
-- `docs/adr/001-adopt-bentopdf-as-pdf-toolkit.md` — ADR for adoption decision
-- `docs/adr/002-fork-guardrails-upstream-protection.md` — ADR for fork safety guardrails
+- `docs-cainmani/adr/001-adopt-bentopdf-as-pdf-toolkit.md` — ADR for adoption decision
+- `docs-cainmani/adr/002-fork-guardrails-upstream-protection.md` — ADR for fork safety guardrails
 - `.github/workflows/ci-cd.yml` — TruffleHog secrets scan + auto-deploy on merge
 - `.claude/commands/` — shared Claude Code slash commands (`/audit`, `/review`, `/safe-pr`)
 - `.claude/hooks/validate-gh-repo.sh` — PreToolUse hook blocking `gh` commands without `--repo`
@@ -158,7 +158,7 @@ User Browser --> Keycloak (via oauth2-proxy) --> BentoPDF (nginx static files)
 - **Production compose:** `docker-compose.prod.yml` (oauth2-proxy + BentoPDF via Traefik forwardAuth)
 - **Env template:** `.env.prod.example`
 - **CI/CD:** `.github/workflows/ci-cd.yml` (TruffleHog + auto-deploy on merge)
-- **ADR:** `docs/adr/001-adopt-bentopdf-as-pdf-toolkit.md`
+- **ADR:** `docs-cainmani/adr/001-adopt-bentopdf-as-pdf-toolkit.md`
 
 ### Pre-Deployment Audit
 
