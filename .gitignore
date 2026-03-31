@@ -17,6 +17,8 @@ dist-ssr
 .env.local
 .claude/*
 !.claude/commands/
+!.claude/hooks/
+!.claude/settings.json
 .claude/settings.local.json
 
 # Editor directories and files
