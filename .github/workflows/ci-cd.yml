@@ -77,3 +77,8 @@ jobs:
             -p ${{ env.APP_NAME }} \
             -f docker-compose.prod.yml \
             up -d --wait
+
+      - name: Prune old images and build cache
+        run: |
+          docker image prune -af --filter "until=24h"
+          docker builder prune -f --filter "until=48h"
