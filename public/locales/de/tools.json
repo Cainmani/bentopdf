@@ -263,23 +263,111 @@
   },
   "pdfToJpg": {
     "name": "PDF zu JPG",
-    "subtitle": "Jede PDF-Seite in ein JPG-Bild konvertieren."
+    "subtitle": "Jede PDF-Seite in ein JPG-Bild konvertieren.",
+    "imageQuality": "Bildqualität",
+    "imageQualityExplanation": "Höhere Qualität = größere Dateigröße",
+    "alert": {
+      "invalidFile": "Ungültige Datei",
+      "invalidFileExplanation": "Bitte wähle eine PDF Datei aus.",
+      "noFile": "Keine Datei",
+      "noFileExplanation": "Bitte lade zuerst eine PDF-Datei hoch.",
+      "conversionSuccess": "PDF erfolgreich in JPGs konvertiert!",
+      "conversionError": "Konvertierung in JPG fehlgeschlagen. Die Datei könnte beschädigt sein."
+    },
+    "loader": {
+      "converting": "Wird in JPG konvertiert..."
+    }
   },
   "pdfToPng": {
     "name": "PDF zu PNG",
-    "subtitle": "Jede PDF-Seite in ein PNG-Bild konvertieren."
+    "subtitle": "Jede PDF-Seite in ein PNG-Bild konvertieren.",
+    "imageScale": "Bildskalierung",
+    "imageScaleExplanation": "Höhere Skalierung = bessere Qualität, aber größere Dateigröße",
+    "alert": {
+      "invalidFile": "Ungültige Datei",
+      "invalidFileExplanation": "Bitte wähle eine PDF Datei aus.",
+      "noFile": "Keine Datei",
+      "noFileExplanation": "Bitte lade zuerst eine PDF-Datei hoch.",
+      "conversionSuccess": "PDF erfolgreich in PNGs konvertiert!",
+      "conversionError": "Konvertierung in PNG fehlgeschlagen. Die Datei könnte beschädigt sein."
+    },
+    "loader": {
+      "converting": "Wird in PNG konvertiert..."
+    }
   },
   "pdfToWebp": {
     "name": "PDF zu WebP",
-    "subtitle": "Jede PDF-Seite in ein WebP-Bild konvertieren."
+    "subtitle": "Jede PDF-Seite in ein WebP-Bild konvertieren.",
+    "imageQuality": "Bildqualität",
+    "imageQualityExplanation": "Höhere Qualität = größere Dateigröße",
+    "alert": {
+      "invalidFile": "Ungültige Datei",
+      "invalidFileExplanation": "Bitte wähle eine PDF Datei aus.",
+      "noFile": "Keine Datei",
+      "noFileExplanation": "Bitte lade zuerst eine PDF-Datei hoch.",
+      "conversionSuccess": "PDF erfolgreich in WebPs konvertiert!",
+      "conversionError": "Konvertierung in WebP fehlgeschlagen. Die Datei könnte beschädigt sein."
+    },
+    "loader": {
+      "converting": "Wird in WebP konvertiert..."
+    }
   },
   "pdfToBmp": {
     "name": "PDF zu BMP",
-    "subtitle": "Jede PDF-Seite in ein BMP-Bild konvertieren."
+    "subtitle": "Jede PDF-Seite in ein BMP-Bild konvertieren.",
+    "alert": {
+      "invalidFile": "Ungültige Datei",
+      "invalidFileExplanation": "Bitte wähle eine PDF Datei aus.",
+      "noFile": "Keine Datei",
+      "noFileExplanation": "Bitte lade zuerst eine PDF-Datei hoch.",
+      "conversionSuccess": "PDF erfolgreich in BMPs konvertiert!",
+      "conversionError": "Konvertierung in BMP fehlgeschlagen. Die Datei könnte beschädigt sein."
+    },
+    "loader": {
+      "converting": "Wird in BMP konvertiert..."
+    }
   },
   "pdfToTiff": {
     "name": "PDF zu TIFF",
-    "subtitle": "Jede PDF-Seite in ein TIFF-Bild konvertieren."
+    "subtitle": "Jede PDF-Seite in ein TIFF-Bild konvertieren.",
+    "dpi": "DPI (Auflösung)",
+    "dpiExplanation": "Höhere DPI = bessere Druckqualität, größere Dateigröße",
+    "compression": "Komprimierung",
+    "compressionExplanation": "LZW und Deflate sind verlustfrei. CCITT Group 4 eignet sich am besten für S/W-Scandokumente.",
+    "colorMode": "Farbmodus",
+    "multiPage": "Als mehrseitiges TIFF speichern (einzelne Datei)",
+    "loadingVips": "Bildprozessor wird geladen...",
+    "converting": "Wird in TIFF konvertiert..."
+  },
+  "pdfToCbz": {
+    "name": "PDF zu CBZ",
+    "subtitle": "Konvertieren Sie ein PDF in eine CBZ-Datei (Comic-Bucharchiv) für Comic-Reader.",
+    "imageFormat": "Bildformat",
+    "quality": "Bildqualität",
+    "qualityExplanation": "Höhere Qualität = größere Dateigröße",
+    "scale": "Skalierung",
+    "scaleExplanation": "Höhere Skalierung = bessere Qualität für hochauflösende Bildschirme",
+    "grayscale": "In Graustufen konvertieren",
+    "manga": "Manga-Modus (rechts nach links)",
+    "includeMetadata": "ComicInfo.xml-Metadaten einschließen",
+    "titleLabel": "Titel",
+    "seriesLabel": "Serie",
+    "authorLabel": "Autor(en)",
+    "numberLabel": "#",
+    "volumeLabel": "Bd.",
+    "publisherLabel": "Verlag",
+    "tagsLabel": "Tags / Genre",
+    "yearLabel": "Erscheinungsjahr",
+    "ratingLabel": "Bewertung (0-5)",
+    "converting": "Wird in CBZ konvertiert...",
+    "alert": {
+      "invalidFile": "Ungültige Datei",
+      "invalidFileExplanation": "Bitte laden Sie eine PDF-Datei hoch.",
+      "noFile": "Keine Datei",
+      "noFileExplanation": "Bitte laden Sie zuerst eine PDF-Datei hoch.",
+      "conversionSuccess": "PDF erfolgreich in CBZ konvertiert!",
+      "conversionError": "PDF konnte nicht in CBZ konvertiert werden. Die Datei ist möglicherweise beschädigt."
+    }
   },
   "pdfToGreyscale": {
     "name": "PDF zu Graustufen",
@@ -652,6 +740,15 @@
     "pageTitle": "PDF-Signatur überprüfen - Digitale Signaturen verifizieren | BentoPDF",
     "subtitle": "Überprüfen Sie digitale Signaturen in Ihren PDF-Dateien. Prüfen Sie die Zertifikatsgültigkeit, sehen Sie Unterzeichnerdetails und bestätigen Sie die Dokumentenintegrität. Die gesamte Verarbeitung erfolgt in Ihrem Browser."
   },
+  "timestampPdf": {
+    "name": "PDF mit Zeitstempel versehen",
+    "pageTitle": "PDF-Zeitstempel online kostenlos - RFC 3161 Dokumentenzeitstempel | BentoPDF",
+    "subtitle": "Fügen Sie Ihrem PDF einen RFC 3161-Zeitstempel über einen vertrauenswürdigen Zeitstempelserver (TSA) hinzu. Beweist, dass Ihr Dokument zu einem bestimmten Zeitpunkt existierte. Kein Zertifikat erforderlich.",
+    "tsaSectionTitle": "Zeitstempelserver (TSA)",
+    "selectTsa": "TSA-Server auswählen",
+    "applyTimestamp": "Zeitstempel anwenden",
+    "successMessage": "PDF erfolgreich mit Zeitstempel versehen! Der Zeitstempel kann in Adobe Acrobat und anderen PDF-Readern überprüft werden."
+  },
   "emailToPdf": {
     "name": "E-Mail zu PDF",
     "subtitle": "E-Mail-Dateien (EML, MSG) in PDF-Format konvertieren. Unterstützt Outlook-Exporte und Standard-E-Mail-Formate.",
@@ -726,5 +823,32 @@
     "failedLoadTemplate": "Vorlage konnte nicht geladen werden.",
     "noSettings": "Keine konfigurierbaren Einstellungen für diesen Node.",
     "advancedSettings": "Erweiterte Einstellungen"
+  },
+  "pdfOverlay": {
+    "name": "PDF-Überlagerung",
+    "subtitle": "Seiten eines PDFs über oder unter die Seiten eines anderen PDFs legen.",
+    "basePdfLabel": "Basis-PDF",
+    "uploadBasePdf": "Basis-PDF hochladen",
+    "overlayPdfLabel": "Überlagerungs- / Unterlagerungs-PDF",
+    "uploadOverlayPdf": "Überlagerungs-/Unterlagerungs-PDF hochladen",
+    "modeLabel": "Modus",
+    "overlayOption": "Überlagerung (über den Seiten)",
+    "underlayOption": "Unterlagerung (hinter den Seiten)",
+    "pageRangeLabel": "Auf Seiten anwenden (optional)",
+    "pageRangeHint": "Verwenden Sie \"z\" für die letzte Seite. Leer lassen, um auf alle Seiten anzuwenden.",
+    "repeatLabel": "Überlagerungs-/Unterlagerungsseiten wiederholen, wenn Basis länger ist",
+    "processButton": "Überlagerung / Unterlagerung anwenden",
+    "howItWorksUploadTitle": "Zwei PDFs hochladen",
+    "howItWorksUploadDescription": "Laden Sie Ihr Basis-PDF und das PDF hoch, das Sie überlagern oder unterlagern möchten.",
+    "howItWorksModeTitle": "Modus wählen",
+    "howItWorksModeDescription": "Wählen Sie Überlagerung (darüber) oder Unterlagerung (dahinter). Optional Seitenbereich und Wiederholung festlegen.",
+    "howItWorksDownloadTitle": "Herunterladen",
+    "howItWorksDownloadDescription": "Laden Sie Ihr PDF mit angewandter Überlagerung oder Unterlagerung herunter.",
+    "faqDifferenceQuestion": "Was ist der Unterschied zwischen Überlagerung und Unterlagerung?",
+    "faqDifferenceAnswer": "Überlagerung platziert Seiten über Ihr Basis-PDF (wie ein Wasserzeichen). Unterlagerung platziert Seiten hinter Ihr Basis-PDF (wie ein Briefkopf oder Hintergrund).",
+    "faqSinglePageQuestion": "Kann ich ein einseitiges PDF als Überlagerung für alle Seiten verwenden?",
+    "faqSinglePageAnswer": "Ja! Aktivieren Sie die Option \"Wiederholen\" und Ihre Überlagerungsseiten werden auf allen Basisseiten wiederholt. Ein einseitiges Wasserzeichen wird auf jeder Seite angewendet.",
+    "faqPrivacyQuestion": "Sind meine Dateien privat und sicher?",
+    "faqPrivacyAnswer": "Absolut! Die gesamte Verarbeitung findet in Ihrem Browser statt. Ihre Dateien verlassen niemals Ihr Gerät, was vollständige Privatsphäre gewährleistet."
   }
 }

@@ -279,7 +279,45 @@
   },
   "pdfToTiff": {
     "name": "PDF sang TIFF",
-    "subtitle": "Chuyển đổi mỗi trang PDF thành hình ảnh TIFF."
+    "subtitle": "Chuyển đổi mỗi trang PDF thành hình ảnh TIFF.",
+    "dpi": "DPI (Độ phân giải)",
+    "dpiExplanation": "DPI cao hơn = chất lượng in tốt hơn, kích thước tệp lớn hơn",
+    "compression": "Nén",
+    "compressionExplanation": "LZW và Deflate là nén không mất dữ liệu. CCITT Nhóm 4 phù hợp nhất cho tài liệu quét đen trắng.",
+    "colorMode": "Chế độ màu",
+    "multiPage": "Lưu dưới dạng TIFF nhiều trang (một tệp)",
+    "loadingVips": "Đang tải bộ xử lý hình ảnh...",
+    "converting": "Đang chuyển đổi sang TIFF..."
+  },
+  "pdfToCbz": {
+    "name": "PDF sang CBZ",
+    "subtitle": "Chuyển đổi PDF thành tệp CBZ (Kho lưu trữ truyện tranh) cho trình đọc truyện tranh.",
+    "imageFormat": "Định dạng hình ảnh",
+    "quality": "Chất lượng hình ảnh",
+    "qualityExplanation": "Chất lượng cao hơn = kích thước tệp lớn hơn",
+    "scale": "Tỷ lệ",
+    "scaleExplanation": "Tỷ lệ cao hơn = chất lượng tốt hơn cho màn hình độ phân giải cao",
+    "grayscale": "Chuyển sang thang xám",
+    "manga": "Chế độ manga (phải sang trái)",
+    "includeMetadata": "Bao gồm siêu dữ liệu ComicInfo.xml",
+    "titleLabel": "Tiêu đề",
+    "seriesLabel": "Bộ truyện",
+    "authorLabel": "Tác giả",
+    "numberLabel": "#",
+    "volumeLabel": "Tập",
+    "publisherLabel": "Nhà xuất bản",
+    "tagsLabel": "Thẻ / Thể loại",
+    "yearLabel": "Năm xuất bản",
+    "ratingLabel": "Đánh giá (0-5)",
+    "converting": "Đang chuyển đổi sang CBZ...",
+    "alert": {
+      "invalidFile": "Tệp không hợp lệ",
+      "invalidFileExplanation": "Vui lòng tải lên tệp PDF.",
+      "noFile": "Không có tệp",
+      "noFileExplanation": "Vui lòng tải lên tệp PDF trước.",
+      "conversionSuccess": "Chuyển đổi PDF sang CBZ thành công!",
+      "conversionError": "Không thể chuyển đổi PDF sang CBZ. Tệp có thể bị hỏng."
+    }
   },
   "pdfToGreyscale": {
     "name": "PDF sang thang xám",
@@ -652,6 +690,15 @@
     "pageTitle": "Xác minh chữ ký PDF - Xác thực chữ ký số | BentoPDF",
     "subtitle": "Xác minh chữ ký số trong tệp PDF của bạn. Kiểm tra hiệu lực chứng chỉ, xem thông tin người ký và xác nhận tính toàn vẹn tài liệu. Tất cả xử lý diễn ra trong trình duyệt của bạn."
   },
+  "timestampPdf": {
+    "name": "Đóng dấu thời gian PDF",
+    "pageTitle": "Đóng dấu thời gian PDF miễn phí - RFC 3161 | BentoPDF",
+    "subtitle": "Thêm dấu thời gian RFC 3161 vào PDF của bạn thông qua máy chủ TSA đáng tin cậy. Chứng minh tài liệu của bạn tồn tại tại một thời điểm cụ thể. Không cần chứng chỉ.",
+    "tsaSectionTitle": "Máy chủ dấu thời gian (TSA)",
+    "selectTsa": "Chọn máy chủ TSA",
+    "applyTimestamp": "Áp dụng dấu thời gian",
+    "successMessage": "PDF đã được đóng dấu thời gian thành công! Dấu thời gian có thể được xác minh trong Adobe Acrobat và các trình đọc PDF khác."
+  },
   "emailToPdf": {
     "name": "Email sang PDF",
     "subtitle": "Chuyển đổi tệp email (EML, MSG) sang định dạng PDF. Hỗ trợ xuất Outlook và định dạng email tiêu chuẩn.",
@@ -726,5 +773,32 @@
     "failedLoadTemplate": "Không thể tải mẫu.",
     "noSettings": "Không có cài đặt nào có thể cấu hình cho nút này.",
     "advancedSettings": "Cài đặt nâng cao"
+  },
+  "pdfOverlay": {
+    "name": "Chồng PDF",
+    "subtitle": "Chồng hoặc lót các trang từ một PDF lên PDF khác.",
+    "basePdfLabel": "PDF gốc",
+    "uploadBasePdf": "Tải lên PDF gốc",
+    "overlayPdfLabel": "PDF chồng / lót",
+    "uploadOverlayPdf": "Tải lên PDF chồng/lót",
+    "modeLabel": "Chế độ",
+    "overlayOption": "Chồng lên (trên các trang)",
+    "underlayOption": "Lót dưới (sau các trang)",
+    "pageRangeLabel": "Áp dụng cho trang (tùy chọn)",
+    "pageRangeHint": "Dùng \"z\" cho trang cuối. Để trống để áp dụng cho tất cả các trang.",
+    "repeatLabel": "Lặp lại các trang chồng/lót nếu tài liệu gốc dài hơn",
+    "processButton": "Áp dụng chồng / lót",
+    "howItWorksUploadTitle": "Tải lên hai PDF",
+    "howItWorksUploadDescription": "Tải lên PDF gốc và PDF bạn muốn chồng hoặc lót.",
+    "howItWorksModeTitle": "Chọn chế độ",
+    "howItWorksModeDescription": "Chọn chồng lên (phía trên) hoặc lót dưới (phía sau). Tùy chọn đặt phạm vi trang và lặp lại.",
+    "howItWorksDownloadTitle": "Tải xuống",
+    "howItWorksDownloadDescription": "Tải xuống PDF của bạn với phần chồng hoặc lót đã được áp dụng.",
+    "faqDifferenceQuestion": "Sự khác biệt giữa chồng lên và lót dưới là gì?",
+    "faqDifferenceAnswer": "Chồng lên đặt các trang lên trên PDF gốc (như hình mờ). Lót dưới đặt các trang phía sau PDF gốc (như tiêu đề thư hoặc nền).",
+    "faqSinglePageQuestion": "Tôi có thể dùng PDF một trang làm chồng cho tất cả các trang không?",
+    "faqSinglePageAnswer": "Có! Bật tùy chọn \"Lặp lại\" và các trang chồng sẽ lặp lại trên tất cả các trang gốc. Hình mờ một trang sẽ được áp dụng cho mọi trang.",
+    "faqPrivacyQuestion": "Tệp của tôi có được bảo mật không?",
+    "faqPrivacyAnswer": "Chắc chắn! Toàn bộ quá trình xử lý diễn ra trong trình duyệt của bạn. Tệp của bạn không bao giờ rời khỏi thiết bị, đảm bảo quyền riêng tư hoàn toàn."
   }
 }

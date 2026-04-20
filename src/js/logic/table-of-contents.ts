@@ -5,6 +5,7 @@ import {
   showWasmRequiredDialog,
   WasmProvider,
 } from '../utils/wasm-provider.js';
+import { loadPdfWithPasswordPrompt } from '../utils/password-prompt.js';
 
 const worker = new Worker(
   import.meta.env.BASE_URL + 'workers/table-of-contents.worker.js'
@@ -34,15 +35,6 @@ const fileDisplayArea = document.getElementById(
 const backToToolsBtn = document.getElementById(
   'back-to-tools'
 ) as HTMLButtonElement;
-
-interface GenerateTOCMessage {
-  command: 'generate-toc';
-  pdfData: ArrayBuffer;
-  title: string;
-  fontSize: number;
-  fontFamily: number;
-  addBookmark: boolean;
-}
 
 interface TOCSuccessResponse {
   status: 'success';
@@ -95,15 +87,18 @@ function renderFileDisplay(file: File) {
   fileDisplayArea.appendChild(fileDiv);
 }
 
-function handleFileSelect(file: File) {
+async function handleFileSelect(file: File) {
   if (file.type !== 'application/pdf') {
     showStatus('Please select a PDF file.', 'error');
     return;
   }
 
-  pdfFile = file;
+  const result = await loadPdfWithPasswordPrompt(file);
+  if (!result) return;
+  result.pdf.destroy();
+  pdfFile = result.file;
   generateBtn.disabled = false;
-  renderFileDisplay(file);
+  renderFileDisplay(pdfFile);
 }
 
 dropZone.addEventListener('dragover', (e) => {
@@ -185,10 +180,7 @@ worker.onmessage = (e: MessageEvent<TOCWorkerResponse>) => {
     const pdfBytes = new Uint8Array(pdfBytesBuffer);
 
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    downloadFile(
-      blob,
-      pdfFile?.name.replace('.pdf', '_with_toc.pdf') || 'output_with_toc.pdf'
-    );
+    downloadFile(blob, pdfFile?.name || 'document.pdf');
 
     showStatus(
       'Table of contents generated successfully! Download started.',

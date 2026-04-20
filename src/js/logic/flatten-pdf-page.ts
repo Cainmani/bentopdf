@@ -1,14 +1,13 @@
 import { showAlert } from '../ui.js';
-import {
-  downloadFile,
-  formatBytes,
-  readFileAsArrayBuffer,
-} from '../utils/helpers.js';
+import { downloadFile, formatBytes } from '../utils/helpers.js';
+import { batchDecryptIfNeeded } from '../utils/password-prompt.js';
 import { PDFDocument } from 'pdf-lib';
 import { flattenAnnotations } from '../utils/flatten-annotations.js';
 import { icons, createIcons } from 'lucide';
 import JSZip from 'jszip';
+import { deduplicateFileName } from '../utils/deduplicate-filename.js';
 import { FlattenPdfState } from '@/types';
+import { loadPdfDocument } from '../utils/load-pdf-document.js';
 
 const pageState: FlattenPdfState = {
   files: [],
@@ -108,23 +107,22 @@ async function flattenPdf() {
   const loaderModal = document.getElementById('loader-modal');
   const loaderText = document.getElementById('loader-text');
 
+  pageState.files = await batchDecryptIfNeeded(pageState.files);
+
   try {
     if (pageState.files.length === 1) {
       if (loaderModal) loaderModal.classList.remove('hidden');
       if (loaderText) loaderText.textContent = 'Flattening PDF...';
 
       const file = pageState.files[0];
-      const arrayBuffer = await readFileAsArrayBuffer(file);
-      const pdfDoc = await PDFDocument.load(arrayBuffer as ArrayBuffer, {
-        ignoreEncryption: true,
-      });
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfDoc = await loadPdfDocument(arrayBuffer);
 
       try {
         flattenFormsInDoc(pdfDoc);
-      } catch (e: any) {
-        if (e.message.includes('getForm')) {
-          // Ignore if no form found
-        } else {
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes('getForm')) {
           throw e;
         }
       }
@@ -138,7 +136,7 @@ async function flattenPdf() {
 
       const newPdfBytes = await pdfDoc.save();
       downloadFile(
-        new Blob([newPdfBytes as BlobPart], { type: 'application/pdf' }),
+        new Blob([new Uint8Array(newPdfBytes)], { type: 'application/pdf' }),
         `flattened_${file.name}`
       );
       if (loaderModal) loaderModal.classList.add('hidden');
@@ -147,6 +145,7 @@ async function flattenPdf() {
       if (loaderText) loaderText.textContent = 'Flattening multiple PDFs...';
 
       const zip = new JSZip();
+      const usedNames = new Set<string>();
       let processedCount = 0;
 
       for (let i = 0; i < pageState.files.length; i++) {
@@ -155,17 +154,14 @@ async function flattenPdf() {
           loaderText.textContent = `Flattening ${i + 1}/${pageState.files.length}: ${file.name}...`;
 
         try {
-          const arrayBuffer = await readFileAsArrayBuffer(file);
-          const pdfDoc = await PDFDocument.load(arrayBuffer as ArrayBuffer, {
-            ignoreEncryption: true,
-          });
+          const arrayBuffer = await file.arrayBuffer();
+          const pdfDoc = await loadPdfDocument(arrayBuffer);
 
           try {
             flattenFormsInDoc(pdfDoc);
-          } catch (e: any) {
-            if (e.message.includes('getForm')) {
-              // Ignore if no form found
-            } else {
+          } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            if (!msg.includes('getForm')) {
               throw e;
             }
           }
@@ -178,7 +174,8 @@ async function flattenPdf() {
           }
 
           const flattenedBytes = await pdfDoc.save();
-          zip.file(`flattened_${file.name}`, flattenedBytes);
+          const zipEntryName = deduplicateFileName(file.name, usedNames);
+          zip.file(zipEntryName, flattenedBytes);
           processedCount++;
         } catch (e) {
           console.error(`Error processing ${file.name}:`, e);
@@ -201,10 +198,12 @@ async function flattenPdf() {
       }
       if (loaderModal) loaderModal.classList.add('hidden');
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error(e);
     if (loaderModal) loaderModal.classList.add('hidden');
-    showAlert('Error', e.message || 'An unexpected error occurred.');
+    const errorMessage =
+      e instanceof Error ? e.message : 'An unexpected error occurred.';
+    showAlert('Error', errorMessage);
   }
 }
 

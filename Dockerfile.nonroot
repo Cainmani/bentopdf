@@ -57,14 +57,14 @@ ENV VITE_FOOTER_TEXT=$VITE_FOOTER_TEXT
 
 ENV NODE_OPTIONS="--max-old-space-size=3072"
 
-RUN --mount=type=secret,id=VITE_CORS_PROXY_URL \
-    --mount=type=secret,id=VITE_CORS_PROXY_SECRET \
+RUN --mount=type=secret,id=VITE_CORS_PROXY_URL,required=false \
+    --mount=type=secret,id=VITE_CORS_PROXY_SECRET,required=false \
     VITE_CORS_PROXY_URL=$(cat /run/secrets/VITE_CORS_PROXY_URL 2>/dev/null || echo "") \
     VITE_CORS_PROXY_SECRET=$(cat /run/secrets/VITE_CORS_PROXY_SECRET 2>/dev/null || echo "") \
     npm run build:with-docs
 
 # Production stage — uses standard nginx (starts as root, drops to PUID/PGID)
-FROM nginx:stable-alpine-slim
+FROM nginx:alpine-slim
 
 LABEL org.opencontainers.image.source="https://github.com/alam00000/bentopdf"
 LABEL org.opencontainers.image.url="https://github.com/alam00000/bentopdf"
@@ -74,11 +74,13 @@ ARG BASE_URL
 ENV PUID=1000
 ENV PGID=1000
 ENV DISABLE_IPV6=false
+ENV PORT=8080
 
 RUN apk upgrade --no-cache && apk add --no-cache su-exec
 
 COPY --from=builder /app/dist /usr/share/nginx/html${BASE_URL%/}
 COPY nginx.conf /etc/nginx/nginx.conf
+COPY --from=builder /app/security-headers.conf /etc/nginx/security-headers.conf
 COPY --chmod=755 entrypoint.sh /entrypoint.sh
 
 RUN mkdir -p /etc/nginx/tmp \

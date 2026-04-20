@@ -279,7 +279,45 @@
   },
   "pdfToTiff": {
     "name": "PDF a TIFF",
-    "subtitle": "Convierte cada página PDF en una imagen TIFF."
+    "subtitle": "Convierte cada página PDF en una imagen TIFF.",
+    "dpi": "PPP (Resolución)",
+    "dpiExplanation": "Mayor PPP = mejor calidad para impresión, mayor tamaño de archivo",
+    "compression": "Compresión",
+    "compressionExplanation": "LZW y Deflate son sin pérdida. CCITT Grupo 4 es ideal para documentos escaneados en B/N.",
+    "colorMode": "Modo de color",
+    "multiPage": "Guardar como TIFF multipágina (archivo único)",
+    "loadingVips": "Cargando procesador de imágenes...",
+    "converting": "Convirtiendo a TIFF..."
+  },
+  "pdfToCbz": {
+    "name": "PDF a CBZ",
+    "subtitle": "Convierte un PDF en un archivo CBZ (archivo de cómics) para lectores de cómics.",
+    "imageFormat": "Formato de imagen",
+    "quality": "Calidad de imagen",
+    "qualityExplanation": "Mayor calidad = mayor tamaño de archivo",
+    "scale": "Escala",
+    "scaleExplanation": "Mayor escala = mejor calidad para pantallas de alta resolución",
+    "grayscale": "Convertir a escala de grises",
+    "manga": "Modo manga (derecha a izquierda)",
+    "includeMetadata": "Incluir metadatos ComicInfo.xml",
+    "titleLabel": "Título",
+    "seriesLabel": "Serie",
+    "authorLabel": "Autor(es)",
+    "numberLabel": "#",
+    "volumeLabel": "Vol.",
+    "publisherLabel": "Editorial",
+    "tagsLabel": "Etiquetas / Género",
+    "yearLabel": "Año de publicación",
+    "ratingLabel": "Calificación (0-5)",
+    "converting": "Convirtiendo a CBZ...",
+    "alert": {
+      "invalidFile": "Archivo no válido",
+      "invalidFileExplanation": "Por favor, suba un archivo PDF.",
+      "noFile": "Sin archivo",
+      "noFileExplanation": "Por favor, suba un archivo PDF primero.",
+      "conversionSuccess": "¡PDF convertido a CBZ exitosamente!",
+      "conversionError": "Error al convertir PDF a CBZ. El archivo podría estar dañado."
+    }
   },
   "pdfToGreyscale": {
     "name": "PDF a Escala de Grises",
@@ -652,6 +690,15 @@
     "pageTitle": "Validar Firma PDF - Verificar Firmas Digitales | BentoPDF",
     "subtitle": "Verifica firmas digitales en tus archivos PDF. Comprueba la validez del certificado, ve los detalles del firmante y confirma la integridad del documento."
   },
+  "timestampPdf": {
+    "name": "Sellar PDF con marca de tiempo",
+    "pageTitle": "Marca de tiempo PDF gratis - Sello RFC 3161 | BentoPDF",
+    "subtitle": "Añade una marca de tiempo RFC 3161 a tu PDF mediante un servidor TSA de confianza. Demuestra que tu documento existía en un momento específico. No se requiere certificado.",
+    "tsaSectionTitle": "Servidor de marca de tiempo (TSA)",
+    "selectTsa": "Seleccionar un servidor TSA",
+    "applyTimestamp": "Aplicar marca de tiempo",
+    "successMessage": "¡PDF sellado con marca de tiempo! La marca puede verificarse en Adobe Acrobat y otros lectores PDF."
+  },
   "emailToPdf": {
     "name": "Email a PDF",
     "subtitle": "Convierte archivos de correo (EML, MSG) a formato PDF. Soporta exportaciones de Outlook y formatos de correo estándar.",
@@ -726,5 +773,32 @@
     "failedLoadTemplate": "Error al cargar la plantilla.",
     "noSettings": "No hay opciones configurables para este nodo.",
     "advancedSettings": "Configuración avanzada"
+  },
+  "pdfOverlay": {
+    "name": "Superposición de PDF",
+    "subtitle": "Superponer o colocar como fondo páginas de un PDF sobre otro.",
+    "basePdfLabel": "PDF base",
+    "uploadBasePdf": "Subir PDF base",
+    "overlayPdfLabel": "PDF de superposición / fondo",
+    "uploadOverlayPdf": "Subir PDF de superposición/fondo",
+    "modeLabel": "Modo",
+    "overlayOption": "Superposición (encima de las páginas)",
+    "underlayOption": "Fondo (detrás de las páginas)",
+    "pageRangeLabel": "Aplicar a páginas (opcional)",
+    "pageRangeHint": "Use \"z\" para la última página. Deje vacío para aplicar a todas las páginas.",
+    "repeatLabel": "Repetir páginas de superposición/fondo si el base es más largo",
+    "processButton": "Aplicar superposición / fondo",
+    "howItWorksUploadTitle": "Subir dos PDFs",
+    "howItWorksUploadDescription": "Suba su PDF base y el PDF que desea superponer o colocar como fondo.",
+    "howItWorksModeTitle": "Elegir modo",
+    "howItWorksModeDescription": "Seleccione superposición (encima) o fondo (detrás). Opcionalmente establezca un rango de páginas y repetición.",
+    "howItWorksDownloadTitle": "Descargar",
+    "howItWorksDownloadDescription": "Descargue su PDF con la superposición o fondo aplicado.",
+    "faqDifferenceQuestion": "¿Cuál es la diferencia entre superposición y fondo?",
+    "faqDifferenceAnswer": "La superposición coloca páginas encima de su PDF base (como una marca de agua). El fondo coloca páginas detrás de su PDF base (como un membrete o fondo).",
+    "faqSinglePageQuestion": "¿Puedo usar un PDF de una sola página como superposición para todas las páginas?",
+    "faqSinglePageAnswer": "¡Sí! Active la opción \"Repetir\" y las páginas de superposición se repetirán en todas las páginas base. Una marca de agua de una página se aplicará a cada página.",
+    "faqPrivacyQuestion": "¿Mis archivos son privados y seguros?",
+    "faqPrivacyAnswer": "¡Por supuesto! Todo el procesamiento ocurre en su navegador. Sus archivos nunca abandonan su dispositivo, garantizando total privacidad."
   }
 }

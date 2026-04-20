@@ -4,10 +4,12 @@ import { downloadFile, formatBytes, getPDFDocument } from '../utils/helpers.js';
 import { createIcons, icons } from 'lucide';
 import Sortable from 'sortablejs';
 import { isCpdfAvailable } from '../utils/cpdf-helper.js';
+import { makeUniqueFileKey } from '../utils/deduplicate-filename.js';
 import {
   showWasmRequiredDialog,
   WasmProvider,
 } from '../utils/wasm-provider.js';
+import { batchDecryptIfNeeded } from '../utils/password-prompt.js';
 
 const pageState: AlternateMergeState = {
   files: [],
@@ -68,23 +70,26 @@ async function updateUI() {
     createIcons({ icons });
 
     // Load PDFs and populate list
+    hideLoader();
+    pageState.files = await batchDecryptIfNeeded(pageState.files);
     showLoader('Loading PDF files...');
     fileList.innerHTML = '';
 
     try {
-      for (const file of pageState.files) {
-        const arrayBuffer = await file.arrayBuffer();
-        pageState.pdfBytes.set(file.name, arrayBuffer);
+      for (let i = 0; i < pageState.files.length; i++) {
+        const file = pageState.files[i];
 
-        const bytesForPdfJs = arrayBuffer.slice(0);
-        const pdfjsDoc = await getPDFDocument({ data: bytesForPdfJs }).promise;
-        pageState.pdfDocs.set(file.name, pdfjsDoc);
-        const pageCount = pdfjsDoc.numPages;
+        const fileKey = makeUniqueFileKey(i, file.name);
+        const bytes = await file.arrayBuffer();
+        const pdf = await getPDFDocument({ data: bytes.slice(0) }).promise;
+        pageState.pdfBytes.set(fileKey, bytes);
+        pageState.pdfDocs.set(fileKey, pdf);
+        const pageCount = pdf.numPages;
 
         const li = document.createElement('li');
         li.className =
           'bg-gray-700 p-3 rounded-lg border border-gray-600 flex items-center justify-between';
-        li.dataset.fileName = file.name;
+        li.dataset.fileName = fileKey;
 
         const infoDiv = document.createElement('div');
         infoDiv.className = 'flex items-center gap-2 truncate flex-1';

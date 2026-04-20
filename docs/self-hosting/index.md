@@ -138,6 +138,36 @@ docker build \
 
 Branding works in both full mode and Simple Mode, and can be combined with all other build-time options (`BASE_URL`, `SIMPLE_MODE`, `VITE_DEFAULT_LANGUAGE`).
 
+### Disabling Specific Tools
+
+Hide individual tools for compliance or security. Disabled tools are removed from the homepage, search, shortcuts, workflow builder, and direct URL access.
+
+Tool IDs are the page URL without `.html` — open any tool and look at the URL (e.g., `edit-pdf`, `sign-pdf`, `encrypt-pdf`).
+
+**Build-time** (baked into the bundle):
+
+```bash
+DISABLE_TOOLS="edit-pdf,sign-pdf" npm run build
+```
+
+**Runtime** (no rebuild needed — mount a `config.json`):
+
+```json
+{
+  "disabledTools": ["edit-pdf", "sign-pdf"]
+}
+```
+
+```bash
+docker run -d -p 3000:8080 \
+  -v ./config.json:/usr/share/nginx/html/config.json:ro \
+  ghcr.io/alam00000/bentopdf:latest
+```
+
+Both methods can be combined — the lists are merged.
+
+You can also disable specific features inside the PDF Editor (e.g., redaction) without disabling the entire tool by adding `editorDisabledCategories` to `config.json`. See the [Docker guide](/self-hosting/docker#disabling-editor-features) for the full list of categories.
+
 ## Deployment Guides
 
 Choose your platform:
@@ -173,8 +203,8 @@ These are set in `.env.production` and baked into the build:
 
 ```bash
 VITE_WASM_PYMUPDF_URL=https://cdn.jsdelivr.net/npm/@bentopdf/pymupdf-wasm@0.11.16/
-VITE_WASM_GS_URL=https://cdn.jsdelivr.net/npm/@bentopdf/gs-wasm/assets/
-VITE_WASM_CPDF_URL=https://cdn.jsdelivr.net/npm/coherentpdf/dist/
+VITE_WASM_GS_URL=https://cdn.jsdelivr.net/npm/@bentopdf/gs-wasm@0.1.1/assets/
+VITE_WASM_CPDF_URL=https://cdn.jsdelivr.net/npm/coherentpdf@2.5.5/dist/
 VITE_TESSERACT_WORKER_URL=
 VITE_TESSERACT_CORE_URL=
 VITE_TESSERACT_LANG_URL=

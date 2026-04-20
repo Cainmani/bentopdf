@@ -279,7 +279,45 @@
   },
   "pdfToTiff": {
     "name": "PDF 转 TIFF",
-    "subtitle": "将每一页 PDF 转换为 TIFF 图片。"
+    "subtitle": "将每一页 PDF 转换为 TIFF 图片。",
+    "dpi": "DPI (分辨率)",
+    "dpiExplanation": "DPI 越高 = 打印质量越好，文件越大",
+    "compression": "压缩方式",
+    "compressionExplanation": "LZW 和 Deflate 为无损压缩。CCITT Group 4 最适合黑白扫描文档。",
+    "colorMode": "色彩模式",
+    "multiPage": "保存为多页 TIFF (单个文件)",
+    "loadingVips": "正在加载图像处理器...",
+    "converting": "正在转换为 TIFF..."
+  },
+  "pdfToCbz": {
+    "name": "PDF 转 CBZ",
+    "subtitle": "将 PDF 转换为 CBZ (漫画书归档) 文件，适用于漫画阅读器。",
+    "imageFormat": "图像格式",
+    "quality": "图像质量",
+    "qualityExplanation": "质量越高 = 文件越大",
+    "scale": "缩放",
+    "scaleExplanation": "缩放越高 = 高分辨率屏幕上质量越好",
+    "grayscale": "转换为灰度",
+    "manga": "漫画模式 (从右到左)",
+    "includeMetadata": "包含 ComicInfo.xml 元数据",
+    "titleLabel": "标题",
+    "seriesLabel": "系列",
+    "authorLabel": "作者",
+    "numberLabel": "#",
+    "volumeLabel": "卷",
+    "publisherLabel": "出版社",
+    "tagsLabel": "标签 / 类型",
+    "yearLabel": "出版年份",
+    "ratingLabel": "评分 (0-5)",
+    "converting": "正在转换为 CBZ...",
+    "alert": {
+      "invalidFile": "无效文件",
+      "invalidFileExplanation": "请上传 PDF 文件。",
+      "noFile": "没有文件",
+      "noFileExplanation": "请先上传 PDF 文件。",
+      "conversionSuccess": "PDF 已成功转换为 CBZ!",
+      "conversionError": "无法将 PDF 转换为 CBZ。文件可能已损坏。"
+    }
   },
   "pdfToGreyscale": {
     "name": "PDF 转 灰度",
@@ -652,6 +690,15 @@
     "pageTitle": "验证 PDF 签名 - 验证数字签名 | BentoPDF",
     "subtitle": "验证您的 PDF 文件中的数字签名。检查证书有效性、查看签名者详情并确认文档完整性。所有处理都在您的浏览器中进行。"
   },
+  "timestampPdf": {
+    "name": "PDF 时间戳",
+    "pageTitle": "免费在线 PDF 时间戳 - RFC 3161 文档时间戳 | BentoPDF",
+    "subtitle": "通过可信的 TSA 服务器为您的 PDF 添加 RFC 3161 时间戳。证明您的文档在特定时间点存在。无需证书。",
+    "tsaSectionTitle": "时间戳服务器 (TSA)",
+    "selectTsa": "选择 TSA 服务器",
+    "applyTimestamp": "应用时间戳",
+    "successMessage": "PDF 时间戳添加成功！时间戳可在 Adobe Acrobat 和其他 PDF 阅读器中验证。"
+  },
   "emailToPdf": {
     "name": "邮件转 PDF",
     "subtitle": "将电子邮件文件 (EML, MSG) 转换为 PDF 格式。支持 Outlook 导出和标准邮件格式。",
@@ -726,5 +773,32 @@
     "failedLoadTemplate": "加载模板失败。",
     "noSettings": "此节点没有可配置的设置。",
     "advancedSettings": "高级设置"
+  },
+  "pdfOverlay": {
+    "name": "PDF 叠加",
+    "subtitle": "将一个 PDF 的页面叠加或衬垫到另一个 PDF 上。",
+    "basePdfLabel": "基础 PDF",
+    "uploadBasePdf": "上传基础 PDF",
+    "overlayPdfLabel": "叠加 / 衬底 PDF",
+    "uploadOverlayPdf": "上传叠加/衬底 PDF",
+    "modeLabel": "模式",
+    "overlayOption": "叠加（在页面上方）",
+    "underlayOption": "衬底（在页面下方）",
+    "pageRangeLabel": "应用到页面（可选）",
+    "pageRangeHint": "使用 \"z\" 表示最后一页。留空则应用到所有页面。",
+    "repeatLabel": "如果基础文件更长，则循环叠加/衬底页面",
+    "processButton": "应用叠加 / 衬底",
+    "howItWorksUploadTitle": "上传两个 PDF",
+    "howItWorksUploadDescription": "上传您的基础 PDF 和要叠加或衬底的 PDF。",
+    "howItWorksModeTitle": "选择模式",
+    "howItWorksModeDescription": "选择叠加（上方）或衬底（下方）。可选设置页面范围和重复。",
+    "howItWorksDownloadTitle": "下载",
+    "howItWorksDownloadDescription": "下载应用了叠加或衬底的 PDF。",
+    "faqDifferenceQuestion": "叠加和衬底有什么区别？",
+    "faqDifferenceAnswer": "叠加将页面放在基础 PDF 上方（如水印）。衬底将页面放在基础 PDF 下方（如信头或背景）。",
+    "faqSinglePageQuestion": "我可以使用单页 PDF 作为所有页面的叠加吗？",
+    "faqSinglePageAnswer": "可以！启用\"循环\"选项，叠加页面将在所有基础页面上重复。单页水印将应用到每一页。",
+    "faqPrivacyQuestion": "我的文件是否私密安全？",
+    "faqPrivacyAnswer": "当然！所有处理都在您的浏览器中进行。您的文件永远不会离开您的设备，确保完全隐私。"
   }
 }

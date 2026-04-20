@@ -5,6 +5,7 @@
     "contact": "Contact",
     "licensing": "Licence",
     "allTools": "Tous les outils",
+    "docs": "Docs",
     "openMainMenu": "Ouvrir le menu principal",
     "language": "Langue"
   },
@@ -361,5 +362,11 @@
   "simpleMode": {
     "title": "Outils PDF",
     "subtitle": "Sélectionnez un outil pour commencer"
+  },
+  "disabledTool": {
+    "title": "Outil indisponible",
+    "heading": "Cet outil a été désactivé",
+    "message": "Cet outil n'est pas disponible dans votre déploiement. Contactez votre administrateur pour plus d'informations.",
+    "backHome": "Retour à l'accueil"
   }
 }

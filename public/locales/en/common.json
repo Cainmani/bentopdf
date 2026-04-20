@@ -5,6 +5,7 @@
     "contact": "Contact",
     "licensing": "Licensing",
     "allTools": "All Tools",
+    "docs": "Docs",
     "openMainMenu": "Open main menu",
     "language": "Language"
   },
@@ -260,11 +261,13 @@
     "add": "Add",
     "remove": "Remove",
     "loading": "Loading...",
+    "loadingPageCount": "Loading pages...",
     "error": "Error",
     "success": "Success",
     "file": "File",
     "files": "Files",
-    "close": "Close"
+    "close": "Close",
+    "convert": "Convert"
   },
   "about": {
     "hero": {
@@ -361,5 +364,11 @@
   "simpleMode": {
     "title": "PDF Tools",
     "subtitle": "Select a tool to get started"
+  },
+  "disabledTool": {
+    "title": "Tool Unavailable",
+    "heading": "This tool has been disabled",
+    "message": "This tool is not available in your deployment. Contact your administrator for more information.",
+    "backHome": "Back to Home"
   }
 }

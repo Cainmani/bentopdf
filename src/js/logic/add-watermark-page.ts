@@ -14,6 +14,8 @@ import {
 } from '../utils/pdf-operations.js';
 import { AddWatermarkState, PageWatermarkConfig } from '@/types';
 import * as pdfjsLib from 'pdfjs-dist';
+import { loadPdfWithPasswordPrompt } from '../utils/password-prompt.js';
+import { loadPdfDocument } from '../utils/load-pdf-document.js';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -115,16 +117,16 @@ async function handleFiles(files: FileList) {
     showAlert('Invalid File', 'Please upload a valid PDF file.');
     return;
   }
-  showLoader('Loading PDF...');
   try {
-    const arrayBuffer = await file.arrayBuffer();
-    const pdfBytes = new Uint8Array(arrayBuffer);
-    pageState.pdfDoc = await PDFLibDocument.load(pdfBytes);
-    pageState.file = file;
+    const result = await loadPdfWithPasswordPrompt(file);
+    if (!result) return;
+    showLoader('Loading PDF...');
+    const pdfBytes = new Uint8Array(result.bytes);
+    pageState.pdfDoc = await loadPdfDocument(pdfBytes);
+    pageState.file = result.file;
     pageState.pdfBytes = pdfBytes;
 
-    cachedPdfjsDoc = await pdfjsLib.getDocument({ data: pdfBytes.slice() })
-      .promise;
+    cachedPdfjsDoc = result.pdf;
     totalPageCount = cachedPdfjsDoc.numPages;
     currentPageNum = 1;
     pageWatermarks.clear();
@@ -1008,12 +1010,15 @@ async function applyWatermark() {
 
     downloadFile(
       new Blob([new Uint8Array(resultBytes)], { type: 'application/pdf' }),
-      'watermarked.pdf'
+      pageState.file?.name || 'document.pdf'
     );
     showAlert('Success', 'Watermark added successfully!', 'success');
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error(e);
-    showAlert('Error', e.message || 'Could not add the watermark.');
+    showAlert(
+      'Error',
+      e instanceof Error ? e.message : 'Could not add the watermark.'
+    );
   } finally {
     hideLoader();
   }

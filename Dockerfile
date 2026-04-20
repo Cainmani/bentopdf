@@ -59,16 +59,19 @@ ENV VITE_BRAND_NAME=$VITE_BRAND_NAME
 ENV VITE_BRAND_LOGO=$VITE_BRAND_LOGO
 ENV VITE_FOOTER_TEXT=$VITE_FOOTER_TEXT
 
+ARG DISABLE_TOOLS
+ENV DISABLE_TOOLS=$DISABLE_TOOLS
+
 ENV NODE_OPTIONS="--max-old-space-size=3072"
 
-RUN --mount=type=secret,id=VITE_CORS_PROXY_URL \
-    --mount=type=secret,id=VITE_CORS_PROXY_SECRET \
+RUN --mount=type=secret,id=VITE_CORS_PROXY_URL,required=false \
+    --mount=type=secret,id=VITE_CORS_PROXY_SECRET,required=false \
     VITE_CORS_PROXY_URL=$(cat /run/secrets/VITE_CORS_PROXY_URL 2>/dev/null || echo "") \
     VITE_CORS_PROXY_SECRET=$(cat /run/secrets/VITE_CORS_PROXY_SECRET 2>/dev/null || echo "") \
     npm run build:with-docs
 
 # Production stage
-FROM quay.io/nginx/nginx-unprivileged:stable-alpine-slim
+FROM quay.io/nginx/nginx-unprivileged:alpine-slim
 
 LABEL org.opencontainers.image.source="https://github.com/alam00000/bentopdf"
 LABEL org.opencontainers.image.url="https://github.com/alam00000/bentopdf"
@@ -78,6 +81,7 @@ ARG BASE_URL
 
 # Set this to "true" to disable Nginx listening on IPv6
 ENV DISABLE_IPV6=false
+ENV PORT=8080
 
 USER root
 RUN apk upgrade --no-cache
@@ -85,6 +89,7 @@ USER nginx
 
 COPY --chown=nginx:nginx --from=builder /app/dist /usr/share/nginx/html${BASE_URL%/}
 COPY --chown=nginx:nginx nginx.conf /etc/nginx/nginx.conf
+COPY --chown=nginx:nginx --from=builder /app/security-headers.conf /etc/nginx/security-headers.conf
 COPY --chown=nginx:nginx --chmod=755 nginx-ipv6.sh /docker-entrypoint.d/99-disable-ipv6.sh
 RUN mkdir -p /etc/nginx/tmp && chown -R nginx:nginx /etc/nginx/tmp
 

@@ -7,6 +7,7 @@ import {
   getNodesByCategory,
   createNodeByType,
 } from '../workflow/nodes/registry';
+import { isToolDisabled } from '../utils/disabled-tools.js';
 import type { BaseWorkflowNode } from '../workflow/nodes/base-node';
 import type { WorkflowEditor } from '../workflow/editor';
 import {
@@ -447,7 +448,9 @@ function buildToolbox() {
   ];
 
   for (const cat of categoryOrder) {
-    const entries = categorized[cat.key as keyof typeof categorized] ?? [];
+    const entries = (
+      categorized[cat.key as keyof typeof categorized] ?? []
+    ).filter((entry) => !entry.toolPageId || !isToolDisabled(entry.toolPageId));
     if (entries.length === 0) continue;
 
     const section = document.createElement('div');
@@ -551,7 +554,10 @@ async function addNodeToCanvas(
   try {
     const node = createNodeByType(type);
     if (!node) {
-      console.error('Node type not found in registry:', type);
+      console.error(
+        'Node type not found in registry:',
+        String(type).replace(/[\r\n]+/g, ' ')
+      );
       return;
     }
     await editor.addNode(node);
@@ -910,8 +916,15 @@ function showNodeSettings(node: BaseWorkflowNode) {
     content.appendChild(divider);
   }
 
+  interface FileInputNode extends BaseWorkflowNode {
+    hasFile(): boolean;
+    getFilenames(): string[];
+    removeFile(index: number): void;
+    addFiles(files: File[]): Promise<void>;
+  }
+
   const fileInputConfigs: {
-    cls: any;
+    cls: new (...args: unknown[]) => FileInputNode;
     label: string;
     accept: string;
     btnLabel: string;
@@ -1531,7 +1544,7 @@ function showNodeSettings(node: BaseWorkflowNode) {
     }
   }
 
-  for (const [dropdownKey, mapping] of Object.entries(conditionalVisibility)) {
+  for (const [dropdownKey] of Object.entries(conditionalVisibility)) {
     const ctrl = controlEntries.find(([k]) => k === dropdownKey)?.[1] as
       | { value?: unknown }
       | undefined;

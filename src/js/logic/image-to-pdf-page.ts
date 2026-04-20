@@ -1,9 +1,8 @@
 import { createIcons, icons } from 'lucide';
 import { showAlert, showLoader, hideLoader } from '../ui.js';
 import { downloadFile, formatBytes } from '../utils/helpers.js';
-import { isWasmAvailable, getWasmBaseUrl } from '../config/wasm-cdn-config.js';
-import { showWasmRequiredDialog } from '../utils/wasm-provider.js';
-import { loadPyMuPDF, isPyMuPDFAvailable } from '../utils/pymupdf-loader.js';
+import { loadPyMuPDF } from '../utils/pymupdf-loader.js';
+import type { PyMuPDFInstance } from '@/types';
 import heic2any from 'heic2any';
 import {
   getSelectedQuality,
@@ -16,7 +15,7 @@ const SUPPORTED_FORMATS_DISPLAY =
   'JPG, PNG, BMP, GIF, TIFF, PNM, PGM, PBM, PPM, PAM, JXR, JPX, JP2, PSD, SVG, HEIC, WebP';
 
 let files: File[] = [];
-let pymupdf: any = null;
+let pymupdf: PyMuPDFInstance | null = null;
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializePage);
@@ -177,9 +176,9 @@ function updateUI() {
   }
 }
 
-async function ensurePyMuPDF(): Promise<any> {
+async function ensurePyMuPDF(): Promise<PyMuPDFInstance> {
   if (!pymupdf) {
-    pymupdf = await loadPyMuPDF();
+    pymupdf = (await loadPyMuPDF()) as PyMuPDFInstance;
   }
   return pymupdf;
 }
@@ -203,7 +202,9 @@ async function preprocessFile(file: File): Promise<File> {
       });
     } catch (e) {
       console.error(`Failed to convert HEIC: ${file.name}`, e);
-      throw new Error(`Failed to process HEIC file: ${file.name}`);
+      throw new Error(`Failed to process HEIC file: ${file.name}`, {
+        cause: e,
+      });
     }
   }
 
@@ -247,7 +248,9 @@ async function preprocessFile(file: File): Promise<File> {
       });
     } catch (e) {
       console.error(`Failed to convert WebP: ${file.name}`, e);
-      throw new Error(`Failed to process WebP file: ${file.name}`);
+      throw new Error(`Failed to process WebP file: ${file.name}`, {
+        cause: e,
+      });
     }
   }
 
@@ -270,7 +273,7 @@ async function convertToPdf() {
         const processed = await preprocessFile(file);
         const compressed = await compressImageFile(processed, quality);
         processedFiles.push(compressed);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.warn(error);
         throw error;
       }
@@ -287,11 +290,11 @@ async function convertToPdf() {
     showAlert('Success', 'PDF created successfully!', 'success', () => {
       resetState();
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('[ImageToPDF]', e);
     showAlert(
       'Conversion Error',
-      e.message || 'Failed to convert images to PDF.'
+      e instanceof Error ? e.message : 'Failed to convert images to PDF.'
     );
   } finally {
     hideLoader();
