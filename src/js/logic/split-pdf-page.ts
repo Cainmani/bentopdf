@@ -1,12 +1,9 @@
 import { showLoader, hideLoader, showAlert } from '../ui.js';
+import { t } from '../i18n/i18n';
 import { createIcons, icons } from 'lucide';
 import * as pdfjsLib from 'pdfjs-dist';
-import {
-  downloadFile,
-  getPDFDocument,
-  readFileAsArrayBuffer,
-  formatBytes,
-} from '../utils/helpers.js';
+import { downloadFile, getPDFDocument, formatBytes } from '../utils/helpers.js';
+import { loadPdfWithPasswordPrompt } from '../utils/password-prompt.js';
 import { state } from '../state.js';
 import {
   renderPagesProgressively,
@@ -17,8 +14,8 @@ import { isCpdfAvailable } from '../utils/cpdf-helper.js';
 import { showWasmRequiredDialog } from '../utils/wasm-provider.js';
 import JSZip from 'jszip';
 import { PDFDocument as PDFLibDocument } from 'pdf-lib';
+import { loadPdfDocument } from '../utils/load-pdf-document.js';
 
-// @ts-ignore
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.mjs',
   import.meta.url
@@ -71,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const metaSpan = document.createElement('div');
         metaSpan.className = 'text-xs text-gray-400';
-        metaSpan.textContent = `${formatBytes(file.size)} • Loading pages...`; // Placeholder
+        metaSpan.textContent = `${formatBytes(file.size)} • ${t('common.loadingPageCount')}`; // Placeholder
 
         infoContainer.append(nameSpan, metaSpan);
 
@@ -92,16 +89,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Load PDF Document
         try {
-          if (!state.pdfDoc) {
-            showLoader('Loading PDF...');
-            const arrayBuffer = (await readFileAsArrayBuffer(
-              file
-            )) as ArrayBuffer;
-            state.pdfDoc = await PDFLibDocument.load(arrayBuffer);
-            hideLoader();
+          const result = await loadPdfWithPasswordPrompt(file);
+          if (!result) {
+            state.files = [];
+            updateUI();
+            return;
           }
-          // Update page count
-          metaSpan.textContent = `${formatBytes(file.size)} • ${state.pdfDoc.getPageCount()} pages`;
+          const pageCount = result.pdf.numPages;
+          result.pdf.destroy();
+          state.files[0] = result.file;
+          state.pdfDoc = await loadPdfDocument(result.bytes);
+          metaSpan.textContent = `${formatBytes(file.size)} • ${pageCount} pages`;
         } catch (error) {
           console.error('Error loading PDF:', error);
           showAlert('Error', 'Failed to load PDF file.');
@@ -138,10 +136,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // If pdfDoc is not loaded yet (e.g. page refresh), try to load it from the first file
         if (state.files.length > 0) {
           const file = state.files[0];
-          const arrayBuffer = (await readFileAsArrayBuffer(
-            file
-          )) as ArrayBuffer;
-          state.pdfDoc = await PDFLibDocument.load(arrayBuffer);
+          hideLoader();
+          const result = await loadPdfWithPasswordPrompt(file);
+          if (!result) {
+            showLoader('Rendering page previews...');
+            throw new Error('No PDF document loaded');
+          }
+          result.pdf.destroy();
+          state.files[0] = result.file;
+          state.pdfDoc = await loadPdfDocument(result.bytes);
+          showLoader('Rendering page previews...');
         } else {
           throw new Error('No PDF document loaded');
         }
@@ -173,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         imgContainer.append(img, pageNumDiv);
         wrapper.appendChild(imgContainer);
 
-        const handleSelection = (e: any) => {
+        const handleSelection = (e: Event) => {
           e.preventDefault();
           e.stopPropagation();
 
@@ -281,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let indicesToExtract: number[] = [];
 
       switch (splitMode) {
-        case 'range':
+        case 'range': {
           const pageRangeInput = (
             document.getElementById('page-range') as HTMLInputElement
           ).value;
@@ -326,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
               const group = rangeGroups[i];
               const newPdf = await PDFLibDocument.create();
               const copiedPages = await newPdf.copyPages(state.pdfDoc, group);
-              copiedPages.forEach((page: any) => newPdf.addPage(page));
+              copiedPages.forEach((page) => newPdf.addPage(page));
               const pdfBytes = await newPdf.save();
 
               const minPage = Math.min(...group) + 1;
@@ -352,8 +356,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
           }
           break;
+        }
 
-        case 'even-odd':
+        case 'even-odd': {
           const choiceElement = document.querySelector(
             'input[name="even-odd-choice"]:checked'
           ) as HTMLInputElement;
@@ -366,6 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (choice === 'odd' && (i + 1) % 2 !== 0) indicesToExtract.push(i);
           }
           break;
+        }
         case 'all':
           indicesToExtract = Array.from({ length: totalPages }, (_, i) => i);
           break;
@@ -374,8 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.page-thumbnail-wrapper.selected')
           ).map((el) => parseInt((el as HTMLElement).dataset.pageIndex || '0'));
           break;
-        case 'bookmarks':
-          // Check if CPDF is configured
+        case 'bookmarks': {
           if (!isCpdfAvailable()) {
             showWasmRequiredDialog('cpdf');
             hideLoader();
@@ -399,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (bookmarkLevel === 'all' || level === parseInt(bookmarkLevel)) {
               if (page > 1 && !splitPages.includes(page - 1)) {
-                splitPages.push(page - 1); // Convert to 0-based index
+                splitPages.push(page - 1);
               }
             }
           }
@@ -429,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
               state.pdfDoc,
               pageIndices
             );
-            copiedPages.forEach((page: any) => newPdf.addPage(page));
+            copiedPages.forEach((page) => newPdf.addPage(page));
             const pdfBytes2 = await newPdf.save();
             zip.file(`split-${i + 1}.pdf`, pdfBytes2);
           }
@@ -441,8 +446,9 @@ document.addEventListener('DOMContentLoaded', () => {
             resetState();
           });
           return;
+        }
 
-        case 'n-times':
+        case 'n-times': {
           const nValue = parseInt(
             (document.getElementById('split-n-value') as HTMLInputElement)
               ?.value || '5'
@@ -465,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
               state.pdfDoc,
               pageIndices
             );
-            copiedPages.forEach((page: any) => newPdf.addPage(page));
+            copiedPages.forEach((page) => newPdf.addPage(page));
             const pdfBytes3 = await newPdf.save();
             zip2.file(`split-${i + 1}.pdf`, pdfBytes3);
           }
@@ -477,6 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
             resetState();
           });
           return;
+        }
       }
 
       const uniqueIndices = [...new Set(indicesToExtract)];
@@ -501,8 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ]);
           newPdf.addPage(copiedPage);
           const pdfBytes = await newPdf.save();
-          // @ts-ignore
-          zip.file(`page-${index + 1}.pdf`, pdfBytes);
+          zip.file(`page-${index + 1}.pdf`, new Uint8Array(pdfBytes));
         }
         const zipBlob = await zip.generateAsync({ type: 'blob' });
         downloadFile(zipBlob, 'split-pages.zip');
@@ -512,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
           state.pdfDoc,
           uniqueIndices as number[]
         );
-        copiedPages.forEach((page: any) => newPdf.addPage(page));
+        copiedPages.forEach((page) => newPdf.addPage(page));
         const pdfBytes = await newPdf.save();
         downloadFile(
           new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' }),
@@ -527,11 +533,13 @@ document.addEventListener('DOMContentLoaded', () => {
       showAlert('Success', 'PDF split successfully!', 'success', () => {
         resetState();
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
       showAlert(
         'Error',
-        e.message || 'Failed to split PDF. Please check your selection.'
+        e instanceof Error
+          ? e.message
+          : 'Failed to split PDF. Please check your selection.'
       );
     } finally {
       hideLoader();

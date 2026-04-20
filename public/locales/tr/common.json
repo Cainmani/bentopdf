@@ -5,6 +5,7 @@
     "contact": "İletişim",
     "licensing": "Lisanslama",
     "allTools": "Tüm Araçlar",
+    "docs": "Docs",
     "openMainMenu": "Ana menüyü aç",
     "language": "Dil"
   },
@@ -361,5 +362,11 @@
   "simpleMode": {
     "title": "PDF Araçları",
     "subtitle": "Başlamak için bir araç seçin"
+  },
+  "disabledTool": {
+    "title": "Araç Kullanılamıyor",
+    "heading": "Bu araç devre dışı bırakıldı",
+    "message": "Bu araç, dağıtımınızda mevcut değil. Daha fazla bilgi için yöneticinizle iletişime geçin.",
+    "backHome": "Ana Sayfaya Dön"
   }
 }

@@ -5,6 +5,7 @@
     "contact": "Contato",
     "licensing": "Licenciamento",
     "allTools": "Todas as Ferramentas",
+    "docs": "Docs",
     "openMainMenu": "Abrir menu principal",
     "language": "Idioma"
   },
@@ -361,5 +362,11 @@
   "simpleMode": {
     "title": "Ferramentas PDF",
     "subtitle": "Selecione uma ferramenta para começar"
+  },
+  "disabledTool": {
+    "title": "Ferramenta Indisponível",
+    "heading": "Esta ferramenta foi desativada",
+    "message": "Esta ferramenta não está disponível na sua implantação. Entre em contato com o seu administrador para mais informações.",
+    "backHome": "Voltar para o Início"
   }
 }

@@ -279,7 +279,45 @@
   },
   "pdfToTiff": {
     "name": "PDF till TIFF",
-    "subtitle": "Konvertera varje PDF-sida till en TIFF-bild."
+    "subtitle": "Konvertera varje PDF-sida till en TIFF-bild.",
+    "dpi": "DPI (Upplösning)",
+    "dpiExplanation": "Högre DPI = bättre kvalitet för utskrift, större filstorlek",
+    "compression": "Komprimering",
+    "compressionExplanation": "LZW och Deflate är förlustfria. CCITT Grupp 4 är bäst för svartvita skannade dokument.",
+    "colorMode": "Färgläge",
+    "multiPage": "Spara som flersidig TIFF (en fil)",
+    "loadingVips": "Laddar bildprocessor...",
+    "converting": "Konverterar till TIFF..."
+  },
+  "pdfToCbz": {
+    "name": "PDF till CBZ",
+    "subtitle": "Konvertera en PDF till en CBZ-fil (serietidningsarkiv) för serieläsare.",
+    "imageFormat": "Bildformat",
+    "quality": "Bildkvalitet",
+    "qualityExplanation": "Högre kvalitet = större filstorlek",
+    "scale": "Skala",
+    "scaleExplanation": "Högre skala = bättre kvalitet för högupplösta skärmar",
+    "grayscale": "Konvertera till gråskala",
+    "manga": "Manga-läge (höger till vänster)",
+    "includeMetadata": "Inkludera ComicInfo.xml-metadata",
+    "titleLabel": "Titel",
+    "seriesLabel": "Serie",
+    "authorLabel": "Författare",
+    "numberLabel": "#",
+    "volumeLabel": "Vol.",
+    "publisherLabel": "Förlag",
+    "tagsLabel": "Taggar / Genre",
+    "yearLabel": "Utgivningsår",
+    "ratingLabel": "Betyg (0-5)",
+    "converting": "Konverterar till CBZ...",
+    "alert": {
+      "invalidFile": "Ogiltig fil",
+      "invalidFileExplanation": "Vänligen ladda upp en PDF-fil.",
+      "noFile": "Ingen fil",
+      "noFileExplanation": "Vänligen ladda upp en PDF-fil först.",
+      "conversionSuccess": "PDF konverterad till CBZ framgångsrikt!",
+      "conversionError": "Kunde inte konvertera PDF till CBZ. Filen kan vara skadad."
+    }
   },
   "pdfToGreyscale": {
     "name": "PDF till gråskala",
@@ -652,6 +690,15 @@
     "pageTitle": "Validera PDF-signatur - Verifiera digitala signaturer | BentoPDF",
     "subtitle": "Verifiera digitala signaturer i dina PDF-filer. Kontrollera certifikatgiltighet, visa signerardetaljer och bekräfta dokumentintegritet. All bearbetning sker i din webbläsare."
   },
+  "timestampPdf": {
+    "name": "Tidsstämpla PDF",
+    "pageTitle": "Tidsstämpla PDF gratis online - RFC 3161 dokumenttidsstämpel | BentoPDF",
+    "subtitle": "Lägg till en RFC 3161 tidsstämpel till din PDF via en betrodd TSA-server. Bevisar att ditt dokument existerade vid en specifik tidpunkt. Inget certifikat krävs.",
+    "tsaSectionTitle": "Tidsstämpelserver (TSA)",
+    "selectTsa": "Välj en TSA-server",
+    "applyTimestamp": "Tillämpa tidsstämpel",
+    "successMessage": "PDF tidsstämplad! Tidsstämpeln kan verifieras i Adobe Acrobat och andra PDF-läsare."
+  },
   "emailToPdf": {
     "name": "E-post till PDF",
     "subtitle": "Konvertera e-postfiler (EML, MSG) till PDF-format. Stöder Outlook-exporter och standard e-postformat.",
@@ -726,5 +773,32 @@
     "failedLoadTemplate": "Det gick inte att ladda mallen.",
     "noSettings": "Inga konfigurerbara inställningar för denna nod.",
     "advancedSettings": "Avancerade inställningar"
+  },
+  "pdfOverlay": {
+    "name": "PDF-överlägg",
+    "subtitle": "Lägg sidor från en PDF ovanpå eller under en annan PDF.",
+    "basePdfLabel": "Bas-PDF",
+    "uploadBasePdf": "Ladda upp bas-PDF",
+    "overlayPdfLabel": "Överlägg / Underlägg PDF",
+    "uploadOverlayPdf": "Ladda upp överlägg/underlägg PDF",
+    "modeLabel": "Läge",
+    "overlayOption": "Överlägg (ovanpå sidor)",
+    "underlayOption": "Underlägg (bakom sidor)",
+    "pageRangeLabel": "Tillämpa på sidor (valfritt)",
+    "pageRangeHint": "Använd \"z\" för sista sidan. Lämna tomt för att tillämpa på alla sidor.",
+    "repeatLabel": "Upprepa överlägg/underlägg-sidor om basen är längre",
+    "processButton": "Tillämpa överlägg / underlägg",
+    "howItWorksUploadTitle": "Ladda upp två PDF:er",
+    "howItWorksUploadDescription": "Ladda upp din bas-PDF och den PDF du vill lägga som överlägg eller underlägg.",
+    "howItWorksModeTitle": "Välj läge",
+    "howItWorksModeDescription": "Välj överlägg (ovanpå) eller underlägg (bakom). Ställ valfritt in sidintervall och upprepning.",
+    "howItWorksDownloadTitle": "Ladda ner",
+    "howItWorksDownloadDescription": "Ladda ner din PDF med överlägg eller underlägg tillämpat.",
+    "faqDifferenceQuestion": "Vad är skillnaden mellan överlägg och underlägg?",
+    "faqDifferenceAnswer": "Överlägg placerar sidor ovanpå din bas-PDF (som en vattenstämpel). Underlägg placerar sidor bakom din bas-PDF (som ett brevhuvud eller bakgrund).",
+    "faqSinglePageQuestion": "Kan jag använda en ensidig PDF som överlägg för alla sidor?",
+    "faqSinglePageAnswer": "Ja! Aktivera alternativet \"Upprepa\" och dina överläggsidor upprepas på alla bassidor. En ensidig vattenstämpel tillämpas på varje sida.",
+    "faqPrivacyQuestion": "Är mina filer privata och säkra?",
+    "faqPrivacyAnswer": "Absolut! All bearbetning sker i din webbläsare. Dina filer lämnar aldrig din enhet, vilket garanterar fullständig integritet."
   }
 }

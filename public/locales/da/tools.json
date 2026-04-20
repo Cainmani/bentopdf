@@ -279,7 +279,45 @@
   },
   "pdfToTiff": {
     "name": "PDF til TIFF",
-    "subtitle": "Konverter hver PDF-side til en TIFF-billedfil."
+    "subtitle": "Konverter hver PDF-side til en TIFF-billedfil.",
+    "dpi": "DPI (Opløsning)",
+    "dpiExplanation": "Højere DPI = bedre kvalitet til print, større filstørrelse",
+    "compression": "Komprimering",
+    "compressionExplanation": "LZW og Deflate er tabsfri. CCITT Group 4 er bedst til sort/hvide skannede dokumenter.",
+    "colorMode": "Farvetilstand",
+    "multiPage": "Gem som flersidet TIFF (én fil)",
+    "loadingVips": "Indlæser billedprocessor...",
+    "converting": "Konverterer til TIFF..."
+  },
+  "pdfToCbz": {
+    "name": "PDF til CBZ",
+    "subtitle": "Konverter en PDF til en CBZ-fil (tegneseriearkiv) til tegneserielæsere.",
+    "imageFormat": "Billedformat",
+    "quality": "Billedkvalitet",
+    "qualityExplanation": "Højere kvalitet = større filstørrelse",
+    "scale": "Skalering",
+    "scaleExplanation": "Højere skalering = bedre kvalitet til højopløsningsskærme",
+    "grayscale": "Konverter til gråtoner",
+    "manga": "Manga-tilstand (højre-til-venstre)",
+    "includeMetadata": "Inkluder ComicInfo.xml-metadata",
+    "titleLabel": "Titel",
+    "seriesLabel": "Serie",
+    "authorLabel": "Forfatter(e)",
+    "numberLabel": "#",
+    "volumeLabel": "Bind",
+    "publisherLabel": "Udgiver",
+    "tagsLabel": "Tags / Genre",
+    "yearLabel": "Udgivelsesår",
+    "ratingLabel": "Bedømmelse (0-5)",
+    "converting": "Konverterer til CBZ...",
+    "alert": {
+      "invalidFile": "Ugyldig fil",
+      "invalidFileExplanation": "Upload venligst en PDF-fil.",
+      "noFile": "Ingen fil",
+      "noFileExplanation": "Upload venligst en PDF-fil først.",
+      "conversionSuccess": "PDF konverteret til CBZ!",
+      "conversionError": "Kunne ikke konvertere PDF til CBZ. Filen kan være beskadiget."
+    }
   },
   "pdfToGreyscale": {
     "name": "PDF til gråtoner",
@@ -650,7 +688,16 @@
   "validateSignaturePdf": {
     "name": "Validér PDF-signatur",
     "pageTitle": "Validér PDF-signatur - Verificér digitale signaturer | BentoPDF",
-    "subtitle": "Tjek digitale signaturer i dine PDF’er. Verificér certifikater, se underskriverdetaljer og bekræft dokumentintegritet."
+    "subtitle": "Tjek digitale signaturer i dine PDF'er. Verificér certifikater, se underskriverdetaljer og bekræft dokumentintegritet."
+  },
+  "timestampPdf": {
+    "name": "Tidsstempl PDF",
+    "pageTitle": "Tidsstempl PDF gratis online - RFC 3161 dokumenttidsstempel | BentoPDF",
+    "subtitle": "Tilføj et RFC 3161 tidsstempel til din PDF via en betroet TSA-server. Beviser at dit dokument eksisterede på et bestemt tidspunkt. Intet certifikat påkrævet.",
+    "tsaSectionTitle": "Tidsstempelserver (TSA)",
+    "selectTsa": "Vælg en TSA-server",
+    "applyTimestamp": "Anvend tidsstempel",
+    "successMessage": "PDF tidsstemplet med succes! Tidsstemplet kan verificeres i Adobe Acrobat og andre PDF-læsere."
   },
   "emailToPdf": {
     "name": "Email til PDF",
@@ -726,5 +773,32 @@
     "failedLoadTemplate": "Kunne ikke indlæse skabelon.",
     "noSettings": "Ingen konfigurerbare indstillinger for denne node.",
     "advancedSettings": "Avancerede indstillinger"
+  },
+  "pdfOverlay": {
+    "name": "PDF-overlejring",
+    "subtitle": "Læg sider fra én PDF oven på eller under sider i en anden PDF.",
+    "basePdfLabel": "Basis-PDF",
+    "uploadBasePdf": "Upload basis-PDF",
+    "overlayPdfLabel": "Overlejring / Underlag PDF",
+    "uploadOverlayPdf": "Upload overlejring/underlag PDF",
+    "modeLabel": "Tilstand",
+    "overlayOption": "Overlejring (oven på sider)",
+    "underlayOption": "Underlag (bag sider)",
+    "pageRangeLabel": "Anvend på sider (valgfrit)",
+    "pageRangeHint": "Brug \"z\" for den sidste side. Lad feltet stå tomt for at anvende på alle sider.",
+    "repeatLabel": "Gentag overlejring/underlag-sider hvis basis er længere",
+    "processButton": "Anvend overlejring / underlag",
+    "howItWorksUploadTitle": "Upload to PDF'er",
+    "howItWorksUploadDescription": "Upload din basis-PDF og den PDF, du vil overlejre eller underlægge.",
+    "howItWorksModeTitle": "Vælg tilstand",
+    "howItWorksModeDescription": "Vælg overlejring (oven på) eller underlag (bagved). Indstil eventuelt et sideinterval og gentagelse.",
+    "howItWorksDownloadTitle": "Download",
+    "howItWorksDownloadDescription": "Download din PDF med overlejring eller underlag anvendt.",
+    "faqDifferenceQuestion": "Hvad er forskellen mellem overlejring og underlag?",
+    "faqDifferenceAnswer": "Overlejring placerer sider oven på din basis-PDF (som et vandmærke). Underlag placerer sider bag din basis-PDF (som brevhoved eller baggrund).",
+    "faqSinglePageQuestion": "Kan jeg bruge en enkeltsidet PDF som overlejring på alle sider?",
+    "faqSinglePageAnswer": "Ja! Aktivér \"Gentag\"-indstillingen, og dine overlejringssider vil gentage sig på alle basis-sider. Et enkeltsidigt vandmærke vil blive anvendt på hver side.",
+    "faqPrivacyQuestion": "Er mine filer private og sikre?",
+    "faqPrivacyAnswer": "Absolut! Al behandling sker i din browser. Dine filer forlader aldrig din enhed, hvilket sikrer fuldstændig privatliv."
   }
 }

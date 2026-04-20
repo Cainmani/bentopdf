@@ -448,6 +448,13 @@ const baseCategories = [
         subtitle: 'Convert each PDF page into a TIFF image.',
       },
       {
+        href: import.meta.env.BASE_URL + 'pdf-to-cbz.html',
+        name: 'PDF to CBZ',
+        icon: 'ph-book-open',
+        subtitle:
+          'Convert a PDF into a CBZ (Comic Book Archive) file for comic readers.',
+      },
+      {
         href: import.meta.env.BASE_URL + 'pdf-to-svg.html',
         name: 'PDF to SVG',
         icon: 'ph-file-code',
@@ -537,6 +544,12 @@ const baseCategories = [
         name: 'Organize & Duplicate',
         icon: 'ph-files',
         subtitle: 'Duplicate, reorder, and delete pages.',
+      },
+      {
+        href: import.meta.env.BASE_URL + 'overlay-pdf.html',
+        name: 'PDF Overlay',
+        icon: 'ph-stack-simple',
+        subtitle: 'Overlay or underlay pages from one PDF onto another.',
       },
       {
         href: import.meta.env.BASE_URL + 'add-attachments.html',
@@ -791,6 +804,13 @@ const baseCategories = [
         name: 'Validate Signature',
         icon: 'ph-seal-check',
         subtitle: 'Verify digital signatures and view certificate details.',
+      },
+      {
+        href: import.meta.env.BASE_URL + 'timestamp-pdf.html',
+        name: 'Timestamp PDF',
+        icon: 'ph-clock',
+        subtitle:
+          'Add an RFC 3161 document timestamp using a trusted TSA server.',
       },
     ],
   },

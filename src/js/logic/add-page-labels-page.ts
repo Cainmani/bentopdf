@@ -1,9 +1,9 @@
 import { createIcons, icons } from 'lucide';
-import { PDFDocument } from 'pdf-lib';
 import type {
   AddPageLabelsState,
   LabelRule,
   PageLabelStyleName,
+  CpdfInstance,
 } from '@/types';
 import { showAlert, showLoader, hideLoader } from '../ui.js';
 import { t } from '../i18n/index.js';
@@ -19,30 +19,7 @@ import {
   normalizePageLabelStartValue,
   resolvePageLabelStyle,
 } from '../utils/page-labels.js';
-
-type AddPageLabelsCpdf = {
-  setSlow?: () => void;
-  fromMemory(data: Uint8Array, userpw: string): CoherentPdf;
-  removePageLabels(pdf: CoherentPdf): void;
-  parsePagespec(pdf: CoherentPdf, pagespec: string): CpdfPageRange;
-  all(pdf: CoherentPdf): CpdfPageRange;
-  addPageLabels(
-    pdf: CoherentPdf,
-    style: CpdfLabelStyle,
-    prefix: string,
-    offset: number,
-    range: CpdfPageRange,
-    progress: boolean
-  ): void;
-  toMemory(pdf: CoherentPdf, linearize: boolean, makeId: boolean): Uint8Array;
-  deletePdf(pdf: CoherentPdf): void;
-  decimalArabic: CpdfLabelStyle;
-  lowercaseRoman: CpdfLabelStyle;
-  uppercaseRoman: CpdfLabelStyle;
-  lowercaseLetters: CpdfLabelStyle;
-  uppercaseLetters: CpdfLabelStyle;
-  noLabelPrefixOnly?: CpdfLabelStyle;
-};
+import { loadPdfDocument } from '../utils/load-pdf-document.js';
 
 let labelRuleCounter = 0;
 
@@ -174,10 +151,7 @@ async function handleFiles(files: FileList) {
   showLoader(translate('tools:addPageLabels.loadingPdf', 'Loading PDF...'));
   try {
     const arrayBuffer = await readFileAsArrayBuffer(file);
-    const pdfDoc = await PDFDocument.load(arrayBuffer as ArrayBuffer, {
-      ignoreEncryption: true,
-      throwOnInvalidObject: false,
-    });
+    const pdfDoc = await loadPdfDocument(arrayBuffer as ArrayBuffer);
 
     if (pdfDoc.isEncrypted) {
       showAlert(
@@ -467,8 +441,8 @@ async function addPageLabels() {
       ) as HTMLInputElement | null
     )?.checked ?? true;
 
-  let cpdf: AddPageLabelsCpdf | null = null;
-  let pdf: CoherentPdf | null = null;
+  let cpdf: CpdfInstance | null = null;
+  let pdf: unknown = null;
 
   try {
     cpdf = await getCpdf();
@@ -485,7 +459,7 @@ async function addPageLabels() {
       const rule = pageState.rules[index];
       const trimmedRange = rule.pageRange.trim();
 
-      let range: CpdfPageRange;
+      let range: unknown;
       try {
         range = trimmedRange
           ? cpdf.parsePagespec(pdf, trimmedRange)
@@ -528,7 +502,7 @@ async function addPageLabels() {
 
     downloadFile(
       new Blob([outputBytes], { type: 'application/pdf' }),
-      'page-labels-added.pdf'
+      pageState.file?.name || 'document.pdf'
     );
     showAlert(
       translate('common.success', 'Success'),

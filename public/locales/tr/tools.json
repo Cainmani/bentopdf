@@ -279,7 +279,45 @@
   },
   "pdfToTiff": {
     "name": "PDF'den TIFF'e",
-    "subtitle": "Her PDF sayfasını TIFF görseline dönüştürün."
+    "subtitle": "Her PDF sayfasını TIFF görseline dönüştürün.",
+    "dpi": "DPI (Çözünürlük)",
+    "dpiExplanation": "Daha yüksek DPI = baskı için daha iyi kalite, daha büyük dosya boyutu",
+    "compression": "Sıkıştırma",
+    "compressionExplanation": "LZW ve Deflate kayıpsızdır. CCITT Grup 4, siyah beyaz taranmış belgeler için en iyisidir.",
+    "colorMode": "Renk Modu",
+    "multiPage": "Çok sayfalı TIFF olarak kaydet (tek dosya)",
+    "loadingVips": "Görüntü işlemci yükleniyor...",
+    "converting": "TIFF'e dönüştürülüyor..."
+  },
+  "pdfToCbz": {
+    "name": "PDF'den CBZ'ye",
+    "subtitle": "Çizgi roman okuyucuları için bir PDF'yi CBZ (Çizgi Roman Arşivi) dosyasına dönüştürün.",
+    "imageFormat": "Görüntü Formatı",
+    "quality": "Görüntü Kalitesi",
+    "qualityExplanation": "Daha yüksek kalite = daha büyük dosya boyutu",
+    "scale": "Ölçek",
+    "scaleExplanation": "Daha yüksek ölçek = yüksek çözünürlüklü ekranlar için daha iyi kalite",
+    "grayscale": "Gri tonlamaya dönüştür",
+    "manga": "Manga modu (sağdan sola)",
+    "includeMetadata": "ComicInfo.xml meta verilerini dahil et",
+    "titleLabel": "Başlık",
+    "seriesLabel": "Seri",
+    "authorLabel": "Yazar(lar)",
+    "numberLabel": "#",
+    "volumeLabel": "Cilt",
+    "publisherLabel": "Yayıncı",
+    "tagsLabel": "Etiketler / Tür",
+    "yearLabel": "Yayın Yılı",
+    "ratingLabel": "Puan (0-5)",
+    "converting": "CBZ'ye dönüştürülüyor...",
+    "alert": {
+      "invalidFile": "Geçersiz Dosya",
+      "invalidFileExplanation": "Lütfen bir PDF dosyası yükleyin.",
+      "noFile": "Dosya Yok",
+      "noFileExplanation": "Lütfen önce bir PDF dosyası yükleyin.",
+      "conversionSuccess": "PDF başarıyla CBZ'ye dönüştürüldü!",
+      "conversionError": "PDF, CBZ'ye dönüştürülemedi. Dosya bozuk olabilir."
+    }
   },
   "pdfToGreyscale": {
     "name": "PDF'yi Gri Tonlamaya Çevir",
@@ -666,6 +704,15 @@
     "pageTitle": "Validate PDF Signature - Verify Digital Signatures | BentoPDF",
     "subtitle": "Verify digital signatures in your PDF files. Check certificate validity, view signer details, and confirm document integrity. All processing happens in your browser."
   },
+  "timestampPdf": {
+    "name": "PDF Zaman Damgası",
+    "pageTitle": "PDF Zaman Damgası Ücretsiz - RFC 3161 Belge Zaman Damgası | BentoPDF",
+    "subtitle": "Güvenilir bir TSA sunucusu aracılığıyla PDF'nize RFC 3161 zaman damgası ekleyin. Belgenizin belirli bir zamanda var olduğunu kanıtlar. Sertifika gerekmez.",
+    "tsaSectionTitle": "Zaman Damgası Sunucusu (TSA)",
+    "selectTsa": "Bir TSA sunucusu seçin",
+    "applyTimestamp": "Zaman Damgası Uygula",
+    "successMessage": "PDF başarıyla zaman damgalandı! Zaman damgası Adobe Acrobat ve diğer PDF okuyucularda doğrulanabilir."
+  },
   "pdfToWord": {
     "name": "PDF'den Word'e",
     "subtitle": "PDF dosyalarını düzenlenebilir Word belgelerine dönüştürün."
@@ -726,5 +773,32 @@
     "failedLoadTemplate": "Şablon yüklenemedi.",
     "noSettings": "Bu düğüm için yapılandırılabilir ayar yok.",
     "advancedSettings": "Gelişmiş Ayarlar"
+  },
+  "pdfOverlay": {
+    "name": "PDF Katmanlama",
+    "subtitle": "Bir PDF'in sayfalarını başka bir PDF'in üzerine veya altına yerleştirin.",
+    "basePdfLabel": "Temel PDF",
+    "uploadBasePdf": "Temel PDF yükle",
+    "overlayPdfLabel": "Üst Katman / Alt Katman PDF",
+    "uploadOverlayPdf": "Üst katman/alt katman PDF yükle",
+    "modeLabel": "Mod",
+    "overlayOption": "Üst katman (sayfaların üzerinde)",
+    "underlayOption": "Alt katman (sayfaların arkasında)",
+    "pageRangeLabel": "Sayfalara uygula (isteğe bağlı)",
+    "pageRangeHint": "Son sayfa için \"z\" kullanın. Tüm sayfalara uygulamak için boş bırakın.",
+    "repeatLabel": "Temel daha uzunsa üst/alt katman sayfalarını tekrarla",
+    "processButton": "Üst Katman / Alt Katman Uygula",
+    "howItWorksUploadTitle": "İki PDF Yükle",
+    "howItWorksUploadDescription": "Temel PDF'inizi ve üst katman veya alt katman yapmak istediğiniz PDF'i yükleyin.",
+    "howItWorksModeTitle": "Mod Seçin",
+    "howItWorksModeDescription": "Üst katman (üzerine) veya alt katman (arkasına) seçin. İsteğe bağlı olarak sayfa aralığı ve tekrar ayarlayın.",
+    "howItWorksDownloadTitle": "İndir",
+    "howItWorksDownloadDescription": "Üst katman veya alt katman uygulanmış PDF'inizi indirin.",
+    "faqDifferenceQuestion": "Üst katman ile alt katman arasındaki fark nedir?",
+    "faqDifferenceAnswer": "Üst katman, sayfaları temel PDF'inizin üzerine yerleştirir (filigran gibi). Alt katman, sayfaları temel PDF'inizin arkasına yerleştirir (antetli kağıt veya arka plan gibi).",
+    "faqSinglePageQuestion": "Tek sayfalık bir PDF'i tüm sayfalar için üst katman olarak kullanabilir miyim?",
+    "faqSinglePageAnswer": "Evet! \"Tekrarla\" seçeneğini etkinleştirin ve üst katman sayfalarınız tüm temel sayfalarda tekrarlanır. Tek sayfalık bir filigran her sayfaya uygulanır.",
+    "faqPrivacyQuestion": "Dosyalarım gizli ve güvende mi?",
+    "faqPrivacyAnswer": "Kesinlikle! Tüm işleme tarayıcınızda gerçekleşir. Dosyalarınız cihazınızı asla terk etmez, tam gizlilik sağlanır."
   }
 }

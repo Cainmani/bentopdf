@@ -263,23 +263,119 @@
   },
   "pdfToJpg": {
     "name": "PDF naar JPG",
-    "subtitle": "Converteer elke PDF-pagina naar een JPG-afbeelding."
+    "subtitle": "Converteer elke PDF-pagina naar een JPG-afbeelding.",
+    "imageQuality": "Beeldkwaliteit",
+    "imageQualityExplanation": "Hogere kwaliteit = grotere bestanden",
+    "alert": {
+      "invalidFile": "Ongeldig bestand",
+      "invalidFileExplanation": "Laad een PDF-bestand.",
+      "noFile": "Geen bestand",
+      "noFileExplanation": "Laad eerst een PDF-bestand.",
+      "conversionSuccess": "PDF met succes omgezet naar JPG's!",
+      "conversionError": "Conversie van PDF naar JPG is mislukt. Het bestand kan beschadigd zijn."
+    },
+    "loader": {
+      "converting": "Converteren naar JPG..."
+    }
   },
   "pdfToPng": {
     "name": "PDF naar PNG",
-    "subtitle": "Converteer elke PDF-pagina naar een PNG-afbeelding."
+    "subtitle": "Converteer elke PDF-pagina naar een PNG-afbeelding.",
+    "imageScale": "Schaal",
+    "imageScaleExplanation": "Hogere schaal = betere kwaliteit en grotere bestanden",
+    "alert": {
+      "invalidFile": "Ongeldig bestand",
+      "invalidFileExplanation": "Laad een PDF-bestand.",
+      "noFile": "Geen bestand",
+      "noFileExplanation": "Laad eerst een PDF-bestand.",
+      "conversionSuccess": "PDF met succes omgezet naar PNG's!",
+      "conversionError": "Conversie van PDF naar PNG is mislukt. Het bestand kan beschadigd zijn."
+    },
+    "loader": {
+      "converting": "Converteren naar PNG..."
+    }
   },
   "pdfToWebp": {
     "name": "PDF naar WebP",
-    "subtitle": "Converteer elke PDF-pagina naar een WebP-afbeelding."
+    "subtitle": "Converteer elke PDF-pagina naar een WebP-afbeelding.",
+    "imageQuality": "Beeldkwaliteit",
+    "imageQualityExplanation": "Hogere kwaliteit = grotere bestanden",
+    "alert": {
+      "invalidFile": "Ongeldig bestand",
+      "invalidFileExplanation": "Laad een PDF-bestand.",
+      "noFile": "Geen bestand",
+      "noFileExplanation": "Laad eerst een PDF-bestand.",
+      "conversionSuccess": "PDF met succes omgezet naar WebP's!",
+      "conversionError": "Conversie van PDF naar WebP is mislukt. Het bestand kan beschadigd zijn."
+    },
+    "loader": {
+      "converting": "Converteren naar WebP..."
+    }
   },
   "pdfToBmp": {
     "name": "PDF naar BMP",
-    "subtitle": "Converteer elke PDF-pagina naar een BMP-afbeelding."
+    "subtitle": "Converteer elke PDF-pagina naar een BMP-afbeelding.",
+    "alert": {
+      "invalidFile": "Ongeldig bestand",
+      "invalidFileExplanation": "Laad een PDF-bestand.",
+      "noFile": "Geen bestand",
+      "noFileExplanation": "Laad eerst een PDF-bestand.",
+      "conversionSuccess": "PDF met succes omgezet naar BMP's!",
+      "conversionError": "Conversie van PDF naar BMP is mislukt. Het bestand kan beschadigd zijn."
+    },
+    "loader": {
+      "converting": "Converteren naar BMP..."
+    }
   },
   "pdfToTiff": {
     "name": "PDF naar TIFF",
-    "subtitle": "Converteer elke PDF-pagina naar een TIFF-afbeelding."
+    "subtitle": "Converteer elke PDF-pagina naar een TIFF-afbeelding.",
+    "dpi": "DPI (Resolutie)",
+    "dpiExplanation": "Hogere DPI = betere kwaliteit voor afdrukken, groter bestand",
+    "compression": "Compressie",
+    "compressionExplanation": "LZW en Deflate zijn verliesvrij. CCITT Groep 4 is het beste voor zwart-wit gescande documenten.",
+    "colorMode": "Kleurmodus",
+    "multiPage": "Opslaan als meerpagina-TIFF (één bestand)",
+    "loadingVips": "Beeldprocessor laden...",
+    "converting": "Converteren naar TIFF...",
+    "alert": {
+      "invalidFile": "Ongeldig bestand",
+      "invalidFileExplanation": "Laad een PDF-bestand.",
+      "noFile": "Geen bestand",
+      "noFileExplanation": "Laad eerst een PDF-bestand.",
+      "conversionSuccess": "PDF met succes omgezet naar TIFF's!",
+      "conversionError": "Conversie van PDF naar TIFF is mislukt. Het bestand kan beschadigd zijn."
+    }
+  },
+  "pdfToCbz": {
+    "name": "PDF naar CBZ",
+    "subtitle": "Converteer een PDF naar een CBZ (Comic Book Archive) bestand voor striplezers.",
+    "imageFormat": "Afbeeldingsformaat",
+    "quality": "Beeldkwaliteit",
+    "qualityExplanation": "Hogere kwaliteit = groter bestandsformaat",
+    "scale": "Schaal",
+    "scaleExplanation": "Hogere schaal = betere kwaliteit voor hoge-resolutieschermen",
+    "grayscale": "Converteren naar grijswaarden",
+    "manga": "Mangamodus (rechts-naar-links)",
+    "includeMetadata": "ComicInfo.xml-metadata opnemen",
+    "titleLabel": "Titel",
+    "seriesLabel": "Reeks",
+    "authorLabel": "Auteur(s)",
+    "numberLabel": "#",
+    "volumeLabel": "Vol.",
+    "publisherLabel": "Uitgever",
+    "tagsLabel": "Labels / Genre",
+    "yearLabel": "Publicatiejaar",
+    "ratingLabel": "Beoordeling (0-5)",
+    "converting": "Converteren naar CBZ...",
+    "alert": {
+      "invalidFile": "Ongeldig bestand",
+      "invalidFileExplanation": "Upload een PDF-bestand.",
+      "noFile": "Geen bestand",
+      "noFileExplanation": "Upload eerst een PDF-bestand.",
+      "conversionSuccess": "PDF succesvol geconverteerd naar CBZ!",
+      "conversionError": "Kan PDF niet converteren naar CBZ. Het bestand is mogelijk beschadigd."
+    }
   },
   "pdfToGreyscale": {
     "name": "PDF naar Grijswaarden",
@@ -489,7 +585,7 @@
     "settingsTitle": "Markdown-instellingen",
     "settingsPreset": "Voorinstelling",
     "presetDefault": "Standaard (als GFM)",
-    "presetCommonmark": "CommonMark (strict)",
+    "presetCommonmark": "CommonMark (strikt)",
     "presetZero": "Minimaal (geen functies)",
     "settingsOptions": "Markdown-opties",
     "optAllowHtml": "HTML-tags toestaan",
@@ -626,8 +722,8 @@
     "convertButton": "Tekst extraheren"
   },
   "digitalSignPdf": {
-    "name": "Digitale handtekening PDF",
-    "pageTitle": "Digitale handtekening PDF - Cryptografische handtekening toevoegen | BentoPDF",
+    "name": "Digitale handtekening",
+    "pageTitle": "Digitale handtekening - Cryptografische handtekening toevoegen | BentoPDF",
     "subtitle": "Een cryptografische digitale handtekening toevoegen aan een PDF met behulp van X.509-certificaten. Ondersteunt PKCS#12 (.pfx, .p12) en PEM-formaten. Jouw privésleutel verlaat jouw browser nooit.",
     "certificateSection": "Certificaat",
     "uploadCert": "Certificaat laden (.pfx, .p12)",
@@ -637,7 +733,7 @@
     "certSubject": "Onderwerp",
     "certIssuer": "Uitgever",
     "certValidity": "Geldigheid",
-    "signatureDetails": "Signature Details (Optioneel)",
+    "signatureDetails": "Details (Optioneel)",
     "reason": "Reden",
     "reasonPlaceholder": "bijv., Ik keur dit document goed",
     "location": "Plaats",
@@ -648,9 +744,18 @@
     "successMessage": "PDF is ondertekend! De handtekening kan in elke PDF-lezer worden geverifieerd."
   },
   "validateSignaturePdf": {
-    "name": "PDF-handtekening valideren",
+    "name": "PDF-handtekening Valideren",
     "pageTitle": "PDF-handtekening valideren - Digitale handtekeningen verifiëren | BentoPDF",
     "subtitle": "Digitale handtekeningen in een PDF-bestanden verifiëren. Controleer de geldigheid van het certificaat, bekijk de gegevens van de ondertekenaar en bevestig de integriteit van het document. Alle verwerking gebeurt binnen jouw browser."
+  },
+  "timestampPdf": {
+    "name": "PDF Tijdstempelen",
+    "pageTitle": "PDF tijdstempel gratis online - RFC 3161 documenttijdstempel | BentoPDF",
+    "subtitle": "Voeg een RFC 3161 tijdstempel toe aan je PDF via een vertrouwde TSA-server. Bewijst dat je document op een specifiek moment bestond. Geen certificaat vereist.",
+    "tsaSectionTitle": "Tijdstempelserver (TSA)",
+    "selectTsa": "Selecteer een TSA-server",
+    "applyTimestamp": "Tijdstempel toepassen",
+    "successMessage": "PDF succesvol voorzien van tijdstempel! Het tijdstempel kan worden geverifieerd in Adobe Acrobat en andere PDF-lezers."
   },
   "emailToPdf": {
     "name": "E-mail naar PDF",
@@ -726,5 +831,32 @@
     "failedLoadTemplate": "Sjabloon laden mislukt.",
     "noSettings": "Geen configureerbare instellingen voor deze node.",
     "advancedSettings": "Geavanceerde instellingen"
+  },
+  "pdfOverlay": {
+    "name": "PDF-overlay",
+    "subtitle": "Pagina's van een PDF boven of achter een andere PDF plaatsen.",
+    "basePdfLabel": "Basis-PDF",
+    "uploadBasePdf": "Basis-PDF laden",
+    "overlayPdfLabel": "Overlay / Underlay PDF",
+    "uploadOverlayPdf": "Overlay/underlay PDF laden",
+    "modeLabel": "Modus",
+    "overlayOption": "Overlay (boven de pagina's)",
+    "underlayOption": "Underlay (achter de pagina's)",
+    "pageRangeLabel": "Toepassen op pagina's (optioneel)",
+    "pageRangeHint": "Gebruik \"z\" voor de laatste pagina. Laat leeg om op alle pagina's toe te passen.",
+    "repeatLabel": "Overlay/underlay-pagina's herhalen als basis langer is",
+    "processButton": "Overlay/underlay toepassen",
+    "howItWorksUploadTitle": "Twee PDF's laden",
+    "howItWorksUploadDescription": "Upload uw basis-PDF en de PDF die u erboven of erachter wilt plaatsen.",
+    "howItWorksModeTitle": "Modus kiezen",
+    "howItWorksModeDescription": "Selecteer overlay (erboven) of underlay (erachter). Stel optioneel een paginabereik en herhaling in.",
+    "howItWorksDownloadTitle": "Downloaden",
+    "howItWorksDownloadDescription": "Download uw PDF met de overlay of underlay toegepast.",
+    "faqDifferenceQuestion": "Wat is het verschil tussen overlay en underlay?",
+    "faqDifferenceAnswer": "Overlay plaatst pagina's boven uw basis-PDF (zoals een watermerk). Underlay plaatst pagina's achter uw basis-PDF (zoals een briefhoofd of achtergrond).",
+    "faqSinglePageQuestion": "Kan ik een enkele pagina PDF als overlay voor alle pagina's gebruiken?",
+    "faqSinglePageAnswer": "Ja! Schakel de optie \"Herhalen\" in en uw overlay-pagina's worden herhaald over alle basispagina's. Een watermerk van één pagina wordt op elke pagina toegepast.",
+    "faqPrivacyQuestion": "Zijn mijn bestanden privé en veilig?",
+    "faqPrivacyAnswer": "Absoluut! Alle verwerking vindt plaats in uw browser. Uw bestanden verlaten nooit uw apparaat, wat volledige privacy garandeert."
   }
 }

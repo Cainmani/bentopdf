@@ -263,23 +263,119 @@
   },
   "pdfToJpg": {
     "name": "PDF to JPG",
-    "subtitle": "Convert each PDF page into a JPG image."
+    "subtitle": "Convert each PDF page into a JPG image.",
+    "imageQuality": "Image Quality",
+    "imageQualityExplanation": "Higher quality = larger file size",
+    "alert": {
+      "invalidFile": "Invalid File",
+      "invalidFileExplanation": "Please upload a PDF file.",
+      "noFile": "No File",
+      "noFileExplanation": "Please upload a PDF file first.",
+      "conversionSuccess": "PDF converted to JPGs successfully!",
+      "conversionError": "Failed to convert PDF to JPG. The file might be corrupted."
+    },
+    "loader": {
+      "converting": "Converting to JPG..."
+    }
   },
   "pdfToPng": {
     "name": "PDF to PNG",
-    "subtitle": "Convert each PDF page into a PNG image."
+    "subtitle": "Convert each PDF page into a PNG image.",
+    "imageScale": "Image Scale",
+    "imageScaleExplanation": "Higher scale = better quality but larger file size",
+    "alert": {
+      "invalidFile": "Invalid File",
+      "invalidFileExplanation": "Please upload a PDF file.",
+      "noFile": "No File",
+      "noFileExplanation": "Please upload a PDF file first.",
+      "conversionSuccess": "PDF converted to PNGs successfully!",
+      "conversionError": "Failed to convert PDF to PNG. The file might be corrupted."
+    },
+    "loader": {
+      "converting": "Converting to PNG..."
+    }
   },
   "pdfToWebp": {
     "name": "PDF to WebP",
-    "subtitle": "Convert each PDF page into a WebP image."
+    "subtitle": "Convert each PDF page into a WebP image.",
+    "imageQuality": "Image Quality",
+    "imageQualityExplanation": "Higher quality = larger file size",
+    "alert": {
+      "invalidFile": "Invalid File",
+      "invalidFileExplanation": "Please upload a PDF file.",
+      "noFile": "No File",
+      "noFileExplanation": "Please upload a PDF file first.",
+      "conversionSuccess": "PDF converted to WebPs successfully!",
+      "conversionError": "Failed to convert PDF to WebP. The file might be corrupted."
+    },
+    "loader": {
+      "converting": "Converting to WebP..."
+    }
   },
   "pdfToBmp": {
     "name": "PDF to BMP",
-    "subtitle": "Convert each PDF page into a BMP image."
+    "subtitle": "Convert each PDF page into a BMP image.",
+    "alert": {
+      "invalidFile": "Invalid File",
+      "invalidFileExplanation": "Please upload a PDF file.",
+      "noFile": "No File",
+      "noFileExplanation": "Please upload a PDF file first.",
+      "conversionSuccess": "PDF converted to BMPs successfully!",
+      "conversionError": "Failed to convert PDF to BMP. The file might be corrupted."
+    },
+    "loader": {
+      "converting": "Converting to BMP..."
+    }
   },
   "pdfToTiff": {
     "name": "PDF to TIFF",
-    "subtitle": "Convert each PDF page into a TIFF image."
+    "subtitle": "Convert each PDF page into a TIFF image.",
+    "dpi": "DPI (Resolution)",
+    "dpiExplanation": "Higher DPI = better quality for printing, larger file size",
+    "compression": "Compression",
+    "compressionExplanation": "LZW and Deflate are lossless. CCITT Group 4 is best for B&W scanned documents.",
+    "colorMode": "Color Mode",
+    "multiPage": "Save as multi-page TIFF (single file)",
+    "loadingVips": "Loading image processor...",
+    "converting": "Converting to TIFF...",
+    "alert": {
+      "invalidFile": "Invalid File",
+      "invalidFileExplanation": "Please upload a PDF file.",
+      "noFile": "No File",
+      "noFileExplanation": "Please upload a PDF file first.",
+      "conversionSuccess": "PDF converted to TIFFs successfully!",
+      "conversionError": "Failed to convert PDF to TIFF. The file might be corrupted."
+    }
+  },
+  "pdfToCbz": {
+    "name": "PDF to CBZ",
+    "subtitle": "Convert a PDF into a CBZ (Comic Book Archive) file for comic readers.",
+    "imageFormat": "Image Format",
+    "quality": "Image Quality",
+    "qualityExplanation": "Higher quality = larger file size",
+    "scale": "Scale",
+    "scaleExplanation": "Higher scale = better quality for high-res screens",
+    "grayscale": "Convert to grayscale",
+    "manga": "Manga mode (right-to-left)",
+    "includeMetadata": "Include ComicInfo.xml metadata",
+    "titleLabel": "Title",
+    "seriesLabel": "Series",
+    "authorLabel": "Author(s)",
+    "numberLabel": "#",
+    "volumeLabel": "Vol.",
+    "publisherLabel": "Publisher",
+    "tagsLabel": "Tags / Genre",
+    "yearLabel": "Published Year",
+    "ratingLabel": "Rating (0-5)",
+    "converting": "Converting to CBZ...",
+    "alert": {
+      "invalidFile": "Invalid File",
+      "invalidFileExplanation": "Please upload a PDF file.",
+      "noFile": "No File",
+      "noFileExplanation": "Please upload a PDF file first.",
+      "conversionSuccess": "PDF converted to CBZ successfully!",
+      "conversionError": "Failed to convert PDF to CBZ. The file might be corrupted."
+    }
   },
   "pdfToGreyscale": {
     "name": "PDF to Greyscale",
@@ -652,6 +748,15 @@
     "pageTitle": "Validate PDF Signature - Verify Digital Signatures | BentoPDF",
     "subtitle": "Verify digital signatures in your PDF files. Check certificate validity, view signer details, and confirm document integrity. All processing happens in your browser."
   },
+  "timestampPdf": {
+    "name": "Timestamp PDF",
+    "pageTitle": "Timestamp PDF Online Free - RFC 3161 Document Timestamp | BentoPDF",
+    "subtitle": "Add an RFC 3161 document timestamp to your PDF using a trusted Time Stamp Authority (TSA) server. Proves your document existed at a specific point in time. No certificate required.",
+    "tsaSectionTitle": "Timestamp Server (TSA)",
+    "selectTsa": "Select a TSA server",
+    "applyTimestamp": "Apply Timestamp",
+    "successMessage": "PDF timestamped successfully! The timestamp can be verified in Adobe Acrobat and other PDF readers."
+  },
   "emailToPdf": {
     "name": "Email to PDF",
     "subtitle": "Convert email files (EML, MSG) to PDF format. Supports Outlook exports and standard email formats.",
@@ -726,5 +831,32 @@
     "failedLoadTemplate": "Failed to load template.",
     "noSettings": "No configurable settings for this node.",
     "advancedSettings": "Advanced Settings"
+  },
+  "pdfOverlay": {
+    "name": "PDF Overlay",
+    "subtitle": "Overlay or underlay pages from one PDF onto another.",
+    "basePdfLabel": "Base PDF",
+    "uploadBasePdf": "Upload base PDF",
+    "overlayPdfLabel": "Overlay / Underlay PDF",
+    "uploadOverlayPdf": "Upload overlay/underlay PDF",
+    "modeLabel": "Mode",
+    "overlayOption": "Overlay (on top of pages)",
+    "underlayOption": "Underlay (behind pages)",
+    "pageRangeLabel": "Apply to pages (optional)",
+    "pageRangeHint": "Use \"z\" for the last page. Leave empty to apply to all pages.",
+    "repeatLabel": "Loop overlay/underlay pages if base is longer",
+    "processButton": "Apply Overlay / Underlay",
+    "howItWorksUploadTitle": "Upload Two PDFs",
+    "howItWorksUploadDescription": "Upload your base PDF and the PDF you want to overlay or underlay.",
+    "howItWorksModeTitle": "Choose Mode",
+    "howItWorksModeDescription": "Select overlay (on top) or underlay (behind). Optionally set a page range and repeat.",
+    "howItWorksDownloadTitle": "Download",
+    "howItWorksDownloadDescription": "Download your PDF with the overlay or underlay applied.",
+    "faqDifferenceQuestion": "What is the difference between overlay and underlay?",
+    "faqDifferenceAnswer": "Overlay places pages on top of your base PDF (like a watermark). Underlay places pages behind your base PDF (like a letterhead or background).",
+    "faqSinglePageQuestion": "Can I use a single-page PDF as overlay for all pages?",
+    "faqSinglePageAnswer": "Yes! Enable the \"Loop\" option and your overlay PDF pages will repeat across all base pages. A single-page watermark will apply to every page.",
+    "faqPrivacyQuestion": "Are my files private and secure?",
+    "faqPrivacyAnswer": "Absolutely! All processing happens in your browser. Your files never leave your device, ensuring complete privacy."
   }
 }

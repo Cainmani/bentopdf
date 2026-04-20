@@ -1,5 +1,5 @@
 import { showLoader, hideLoader, showAlert } from '../ui.js';
-import { downloadFile, formatBytes, getPDFDocument } from '../utils/helpers.js';
+import { downloadFile, formatBytes } from '../utils/helpers.js';
 import { createIcons, icons } from 'lucide';
 import { PDFDocument as PDFLibDocument } from 'pdf-lib';
 import {
@@ -7,7 +7,9 @@ import {
   cleanupLazyRendering,
 } from '../utils/render-utils.js';
 import { rotatePdfPages } from '../utils/pdf-operations.js';
+import { loadPdfWithPasswordPrompt } from '../utils/password-prompt.js';
 import * as pdfjsLib from 'pdfjs-dist';
+import { loadPdfDocument } from '../utils/load-pdf-document.js';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -75,7 +77,7 @@ function createPageWrapper(
 
   const canvasWrapper = document.createElement('div');
   canvasWrapper.className =
-    'thumbnail-wrapper flex items-center justify-center p-2 h-36';
+    'thumbnail-wrapper flex items-center justify-center p-2 h-36 pointer-events-none';
   canvasWrapper.style.transition = 'transform 0.3s ease';
   // Apply initial rotation if it exists
   const initialRotation = pageState.rotations[pageIndex] || 0;
@@ -199,16 +201,16 @@ async function updateUI() {
     createIcons({ icons });
 
     try {
+      const result = await loadPdfWithPasswordPrompt(pageState.file);
+      if (!result) {
+        resetState();
+        return;
+      }
       showLoader('Loading PDF...');
-      const arrayBuffer = await pageState.file.arrayBuffer();
 
-      pageState.pdfDoc = await PDFLibDocument.load(arrayBuffer.slice(0), {
-        ignoreEncryption: true,
-        throwOnInvalidObject: false,
-      });
+      pageState.pdfDoc = await loadPdfDocument(result.bytes);
 
-      pageState.pdfJsDoc = await getPDFDocument({ data: arrayBuffer.slice(0) })
-        .promise;
+      pageState.pdfJsDoc = result.pdf;
 
       const pageCount = pageState.pdfDoc.getPageCount();
       pageState.rotations = new Array(pageCount).fill(0);
@@ -244,13 +246,11 @@ async function applyRotations() {
       new Uint8Array(pdfBytes),
       pageState.rotations
     );
-    const originalName = pageState.file.name.replace(/\.pdf$/i, '');
-
     downloadFile(
       new Blob([rotatedPdfBytes as unknown as BlobPart], {
         type: 'application/pdf',
       }),
-      `${originalName}_rotated.pdf`
+      pageState.file.name
     );
 
     showAlert(

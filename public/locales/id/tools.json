@@ -279,7 +279,45 @@
   },
   "pdfToTiff": {
     "name": "PDF ke TIFF",
-    "subtitle": "Konversi setiap halaman PDF menjadi gambar TIFF."
+    "subtitle": "Konversi setiap halaman PDF menjadi gambar TIFF.",
+    "dpi": "DPI (Resolusi)",
+    "dpiExplanation": "DPI lebih tinggi = kualitas lebih baik untuk cetak, ukuran file lebih besar",
+    "compression": "Kompresi",
+    "compressionExplanation": "LZW dan Deflate adalah lossless. CCITT Group 4 paling cocok untuk dokumen pindaian hitam putih.",
+    "colorMode": "Mode Warna",
+    "multiPage": "Simpan sebagai TIFF multi-halaman (satu file)",
+    "loadingVips": "Memuat prosesor gambar...",
+    "converting": "Mengonversi ke TIFF..."
+  },
+  "pdfToCbz": {
+    "name": "PDF ke CBZ",
+    "subtitle": "Konversi PDF menjadi file CBZ (Arsip Buku Komik) untuk pembaca komik.",
+    "imageFormat": "Format Gambar",
+    "quality": "Kualitas Gambar",
+    "qualityExplanation": "Kualitas lebih tinggi = ukuran file lebih besar",
+    "scale": "Skala",
+    "scaleExplanation": "Skala lebih tinggi = kualitas lebih baik untuk layar resolusi tinggi",
+    "grayscale": "Konversi ke skala abu-abu",
+    "manga": "Mode manga (kanan-ke-kiri)",
+    "includeMetadata": "Sertakan metadata ComicInfo.xml",
+    "titleLabel": "Judul",
+    "seriesLabel": "Seri",
+    "authorLabel": "Penulis",
+    "numberLabel": "#",
+    "volumeLabel": "Vol.",
+    "publisherLabel": "Penerbit",
+    "tagsLabel": "Tag / Genre",
+    "yearLabel": "Tahun Terbit",
+    "ratingLabel": "Peringkat (0-5)",
+    "converting": "Mengonversi ke CBZ...",
+    "alert": {
+      "invalidFile": "File Tidak Valid",
+      "invalidFileExplanation": "Silakan unggah file PDF.",
+      "noFile": "Tidak Ada File",
+      "noFileExplanation": "Silakan unggah file PDF terlebih dahulu.",
+      "conversionSuccess": "PDF berhasil dikonversi ke CBZ!",
+      "conversionError": "Gagal mengonversi PDF ke CBZ. File mungkin rusak."
+    }
   },
   "pdfToGreyscale": {
     "name": "PDF ke Skala Abu-abu",
@@ -652,6 +690,15 @@
     "pageTitle": "Validasi Tanda Tangan PDF - Verifikasi Tanda Tangan Digital | BentoPDF",
     "subtitle": "Verifikasi tanda tangan digital di file PDF Anda. Periksa validitas sertifikat, lihat detail penandatangan, dan konfirmasi integritas dokumen. Semua pemrosesan terjadi di browser Anda."
   },
+  "timestampPdf": {
+    "name": "Stempel Waktu PDF",
+    "pageTitle": "Stempel Waktu PDF Gratis Online - RFC 3161 | BentoPDF",
+    "subtitle": "Tambahkan stempel waktu RFC 3161 ke PDF Anda menggunakan server TSA tepercaya. Membuktikan dokumen Anda ada pada waktu tertentu. Tidak memerlukan sertifikat.",
+    "tsaSectionTitle": "Server Stempel Waktu (TSA)",
+    "selectTsa": "Pilih server TSA",
+    "applyTimestamp": "Terapkan Stempel Waktu",
+    "successMessage": "PDF berhasil diberi stempel waktu! Stempel waktu dapat diverifikasi di Adobe Acrobat dan pembaca PDF lainnya."
+  },
   "emailToPdf": {
     "name": "Email ke PDF",
     "subtitle": "Konversi file email (EML, MSG) ke format PDF. Mendukung ekspor Outlook dan format email standar.",
@@ -726,5 +773,32 @@
     "failedLoadTemplate": "Gagal memuat template.",
     "noSettings": "Tidak ada pengaturan yang dapat dikonfigurasi untuk node ini.",
     "advancedSettings": "Pengaturan Lanjutan"
+  },
+  "pdfOverlay": {
+    "name": "Overlay PDF",
+    "subtitle": "Tumpangkan atau sisipkan halaman dari satu PDF ke PDF lainnya.",
+    "basePdfLabel": "PDF Dasar",
+    "uploadBasePdf": "Unggah PDF dasar",
+    "overlayPdfLabel": "PDF Overlay / Underlay",
+    "uploadOverlayPdf": "Unggah PDF overlay/underlay",
+    "modeLabel": "Mode",
+    "overlayOption": "Overlay (di atas halaman)",
+    "underlayOption": "Underlay (di belakang halaman)",
+    "pageRangeLabel": "Terapkan ke halaman (opsional)",
+    "pageRangeHint": "Gunakan \"z\" untuk halaman terakhir. Kosongkan untuk menerapkan ke semua halaman.",
+    "repeatLabel": "Ulangi halaman overlay/underlay jika dasar lebih panjang",
+    "processButton": "Terapkan Overlay / Underlay",
+    "howItWorksUploadTitle": "Unggah Dua PDF",
+    "howItWorksUploadDescription": "Unggah PDF dasar Anda dan PDF yang ingin Anda tumpangkan atau sisipkan.",
+    "howItWorksModeTitle": "Pilih Mode",
+    "howItWorksModeDescription": "Pilih overlay (di atas) atau underlay (di belakang). Atur rentang halaman dan pengulangan secara opsional.",
+    "howItWorksDownloadTitle": "Unduh",
+    "howItWorksDownloadDescription": "Unduh PDF Anda dengan overlay atau underlay yang diterapkan.",
+    "faqDifferenceQuestion": "Apa perbedaan antara overlay dan underlay?",
+    "faqDifferenceAnswer": "Overlay menempatkan halaman di atas PDF dasar Anda (seperti watermark). Underlay menempatkan halaman di belakang PDF dasar Anda (seperti kop surat atau latar belakang).",
+    "faqSinglePageQuestion": "Bisakah saya menggunakan PDF satu halaman sebagai overlay untuk semua halaman?",
+    "faqSinglePageAnswer": "Ya! Aktifkan opsi \"Ulangi\" dan halaman overlay Anda akan berulang di semua halaman dasar. Watermark satu halaman akan diterapkan ke setiap halaman.",
+    "faqPrivacyQuestion": "Apakah file saya pribadi dan aman?",
+    "faqPrivacyAnswer": "Tentu saja! Semua pemrosesan terjadi di browser Anda. File Anda tidak pernah meninggalkan perangkat Anda, memastikan privasi penuh."
   }
 }
