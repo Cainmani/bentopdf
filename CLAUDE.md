@@ -254,7 +254,7 @@ git push origin main
 # Then on the server: git pull && docker compose -f docker-compose.prod.yml up -d
 ```
 
-Last synced: commit 3a985f7 — 2026-03-23
+Last synced: commit 54c6091 (v2.8.3) — 2026-04-20
 
 ---
 
